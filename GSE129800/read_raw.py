@@ -1,7 +1,6 @@
 """youtube video: https://www.youtube.com/watch?v=AXAPR44zitQ
 data analysis guidelines: https://www.nanostring.com/wp-content/uploads/2020/12/Gene_Expression_Data_Analysis_Guidelines.pdf
 
-
     Returns:
         [type]: [description]
     """
@@ -20,14 +19,6 @@ import sys
 
 
 def get_gse(accessionID):
-    """Wanted to make function to pull RAW file from GEO but couldn't figure it out
-
-    Args:
-        accessionID (str): GSE ID
-
-    Returns:
-        gse: GEOParse.BaseGEO
-    """
     path = os.path.join(".", accessionID)
 
     gse = GEOparse.get_GEO(geo=str(accessionID), destdir=path)
@@ -112,9 +103,9 @@ class NanoString:
         norm_factor = [amean / geo for geo in geo_mean]
         for i, factor in enumerate(norm_factor):
             df.iloc[:, i] = df.iloc[:, i].apply(lambda x: x * factor)
-        if type == "Positive":
+        if type.title() == "Positive":
             df.columns.name = "Positive Control Normalization"
-        elif type == "Housekeeping":
+        elif type.title() == "Housekeeping":
             df.columns.name = "CodeSet Content Normalization"
         return df
 
@@ -122,3 +113,4 @@ class NanoString:
 if __name__ == "__main__":
     gse = sys.argv[1]
     nanostring = NanoString(gse)
+    print(nanostring.counts_norm("positive"))
