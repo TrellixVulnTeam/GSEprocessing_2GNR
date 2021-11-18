@@ -1,33 +1,9 @@
-"""youtube video: https://www.youtube.com/watch?v=AXAPR44zitQ
-data analysis guidelines: https://www.nanostring.com/wp-content/uploads/2020/12/Gene_Expression_Data_Analysis_Guidelines.pdf
-
-    Returns:
-        [type]: [description]
-    """
-
 from dataclasses import dataclass
-import GEOparse
-import tarfile
-import gzip
 import os
 import re
 import pandas as pd
 from scipy import stats
 import sys
-
-# import shutil
-
-
-def get_gse(accessionID):
-    path = os.path.join(".", accessionID)
-
-    gse = GEOparse.get_GEO(geo=str(accessionID), destdir=path)
-
-    # soft_filename = str(accessionID) + "_family.soft.gz"
-    # with gzip.open(soft_filename, 'rb') as f_in and open(soft_file_name[:3] + ".txt", 'wb') as f_out:
-    #     shutil.copyfileobj(f_in, f_out)
-
-    return gse
 
 
 @dataclass
@@ -35,10 +11,10 @@ class NanoStringSample:
     sample_path: str
 
     def __post_init__(self):
-        with gzip.open(self.sample_path, "rt") as file_in:
+        with open(self.sample_path) as file_in:
             file_in = file_in.read()
-            file_in = re.split("</.*>", file_in)
-            file_in = [line.split("\n") for line in file_in]
+        file_in = re.split("</.*>", file_in)
+        file_in = [line.split("\n") for line in file_in]
         for group in file_in:
             try:
                 r = re.compile("<.*>")
@@ -62,23 +38,15 @@ class NanoStringSample:
 
 @dataclass
 class NanoString:
-    accessionID: str
+    rcc_dir: str
 
     def __post_init__(self):
-        tar_path = self.accessionID + "_RAW.tar"
-        with tarfile.open(tar_path) as tar:
-            try:
-                rcc_dir = self.accessionID + "_RCC_Files"
-                os.mkdir(rcc_dir)
-                tar.extractall(rcc_dir)
-            except:
-                pass
-            samples = []
-            for sample_filename in os.listdir(rcc_dir):
-                sample_path = os.path.join(rcc_dir, sample_filename)
-                sample = NanoStringSample(sample_path)
-                samples.append(sample)
-            setattr(self, "samples", samples)
+        samples = []
+        for sample_filename in os.listdir(self.rcc_dir):
+            sample_path = os.path.join(self.rcc_dir, sample_filename)
+            sample = NanoStringSample(sample_path)
+            samples.append(sample)
+        setattr(self, "samples", samples)
 
     def raw_counts(self):
         df = self.samples[0].code_summary
@@ -111,6 +79,6 @@ class NanoString:
 
 
 if __name__ == "__main__":
-    gse = sys.argv[1]
-    nanostring = NanoString(gse)
+    rcc_dir = sys.argv[1]
+    nanostring = NanoString(rcc_dir)
     print(nanostring.counts_norm("positive"))
