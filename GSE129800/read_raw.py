@@ -41,108 +41,84 @@ def get_gse(accessionID):
 
 @dataclass
 class NanoStringSample:
-    """Class to hold tar metadata NanoString files"""
-
     sample_path: str
 
     def __post_init__(self):
-        """Reads each file from .tar, splits into lists per <tag> , converts to dataframe
-        and adds as attribute using <tag> name.
-        """
         with gzip.open(self.sample_path, "rt") as file_in:
             file_in = file_in.read()
             file_in = re.split("</.*>", file_in)
             file_in = [line.split("\n") for line in file_in]
-            for group in file_in:
-                try:
-                    r = re.compile("<.*>")
-                    tag = list(filter(r.match, group))[0]
-                    attr = tag[1:-1].lower()
-                    data = group[group.index(tag) + 1 :]
-                    data = [d.split(",") for d in data]
-                    if attr == "code_summary":
-                        df = pd.DataFrame(data[1:], columns=data[0])
-                        df = df.set_index(["CodeClass", "Name", "Accession"])
-                        df = df.astype("float")
-                    else:
-                        df = pd.DataFrame(data)
-                        df.columns = ["Attribute", "Value"]
-                        df = df.set_index("Attribute")
-                    df.columns.name = tag
-                    setattr(self, attr, df)
-                except Exception as e:
-                    pass
+        for group in file_in:
+            try:
+                r = re.compile("<.*>")
+                tag = list(filter(r.match, group))[0]
+                attr = tag[1:-1].lower()
+                data = group[group.index(tag) + 1 :]
+                data = [d.split(",") for d in data]
+                if attr == "code_summary":
+                    df = pd.DataFrame(data[1:], columns=data[0])
+                    df = df.set_index(["CodeClass", "Name", "Accession"])
+                    df = df.astype("float")
+                else:
+                    df = pd.DataFrame(data)
+                    df.columns = ["Attribute", "Value"]
+                    df = df.set_index("Attribute")
+                df.columns.name = attr
+                setattr(self, attr, df)
+            except Exception as e:
+                pass
 
 
-def read_nanostring_tar(filename):
-    """Reads .tar file and creates directory TarFile where all tar files are extracted
-    Then iterates through all extracted files and creates NanoString objects
+@dataclass
+class NanoString:
+    accessionID: str
 
-    Args:
-        filename (str): .tar file for conversion to NanoString
+    def __post_init__(self):
+        tar_path = self.accessionID + "_RAW.tar"
+        with tarfile.open(tar_path) as tar:
+            try:
+                rcc_dir = self.accessionID + "_RCC_Files"
+                os.mkdir(rcc_dir)
+                tar.extractall(rcc_dir)
+            except:
+                pass
+            samples = []
+            for sample_filename in os.listdir(rcc_dir):
+                sample_path = os.path.join(rcc_dir, sample_filename)
+                sample = NanoStringSample(sample_path)
+                samples.append(sample)
+            setattr(self, "samples", samples)
 
-    Returns:
-        list: a list of NanoString objects. One NanoString is created per file
-    """
-    tar = tarfile.open(filename)
-    try:
-        os.makedir("TarFiles")
-        tar.extractall("./TarFiles")
-    except:
-        pass
-    samples = []
-    for sample_filename in os.listdir("./TarFiles"):
-        sample = NanoString("./TarFiles", sample_filename)
-        samples.append(sample)
-    return samples
+    def raw_counts(self):
+        df = self.samples[0].code_summary
+        df.columns = ["Sample 1"]
+        for i, sample in enumerate(self.samples[1:]):
+            to_merge = sample.code_summary
+            to_merge.columns = ["Sample " + str(i + 2)]
+            df = df.merge(to_merge, left_index=True, right_index=True)
+        return df
 
+    def counts_norm(self, type):
+        valid = ["Positive", "Housekeeping"]
+        if type.title() not in valid:
+            raise ValueError(f"counts_norm: type must be one of {valid}.")
 
-def raw_counts(samples):
-    """Iterates through all NanoString objects and pulls the Code_Summary attribute
-    dataframe which includes raw read counts. These are then all merged together to create
-    one dataframe with all sample reads.
-
-    Args:
-        samples (list): list of NanoString objects
-
-    Returns:
-        pd.DataFrame: Singular dataframe containing Code_Summary read counts for all files
-    """
-    df = samples[0].code_summary
-    df.columns = ["Sample 1"]
-    for i, sample in enumerate(samples[1:]):
-        to_merge = sample.code_summary
-        to_merge.columns = ["Sample " + str(i + 2)]
-        df = df.merge(to_merge, left_index=True, right_index=True)
-    return df
-
-
-def raw_counts_norm(df):
-    """Normalizes input df via (1) calculating sample geometric mean (gmean), (2) calculating the
-    arithmetic mean of all gmeans and (3) Dividing amean by each gmean to generate a normalization
-    factor for each sample. This factor is then multipled across the entire sample column. Process
-    pulled from NanoString 'Gene Expression Data Analysis Guideline' pg. 13.
-
-    Args:
-        df (pd.DataFrame): A dataframe containing raw read counts for all samples
-
-    Returns:
-        pd.DataFrame: Normalized dataframe with the respective normalization factor
-        multiplied to every cell.
-    """
-    df_pos = df.reset_index()
-    df_pos = df_pos[df_pos.CodeClass == "Positive"]
-    df_pos = df_pos.set_index(["CodeClass", "Name", "Accession"])
-    geo_mean = stats.gmean(df_pos)
-    amean = geo_mean.mean()
-    norm_factor = [amean / geo for geo in geo_mean]
-    for i, factor in enumerate(norm_factor):
-        df.iloc[:, i] = df.iloc[:, i].apply(lambda x: x * factor)
-    return df
+        df = self.raw_counts()
+        df_pos = df.reset_index()
+        df_pos = df_pos[df_pos.CodeClass == type.title()]
+        df_pos = df_pos.set_index(["CodeClass", "Name", "Accession"])
+        geo_mean = stats.gmean(df_pos)
+        amean = geo_mean.mean()
+        norm_factor = [amean / geo for geo in geo_mean]
+        for i, factor in enumerate(norm_factor):
+            df.iloc[:, i] = df.iloc[:, i].apply(lambda x: x * factor)
+        if type == "Positive":
+            df.columns.name = "Positive Control Normalization"
+        elif type == "Housekeeping":
+            df.columns.name = "CodeSet Content Normalization"
+        return df
 
 
 if __name__ == "__main__":
-    filename = sys.argv[1] + "_RAW.tar"
-    samples = read_nanostring_tar(filename)
-    code_summary_df = raw_counts(samples)
-    df_norm = raw_counts_norm(code_summary_df)
+    gse = sys.argv[1]
+    nanostring = NanoString(gse)
