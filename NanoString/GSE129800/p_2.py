@@ -47,8 +47,12 @@ class NCBIGeo:
                 "Metadata:",
             )
 
+    def gpl_analyze(self):
+        for _, gpl in self.gse.gpls.items():
+            print(gpl)
+
 
 if __name__ == "__main__":
     gse = sys.argv[1]
     ncbi = NCBIGeo(gse)
-    ncbi.m_analyze()
+    ncbi.gpl_analyze()

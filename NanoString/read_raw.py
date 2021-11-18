@@ -48,16 +48,28 @@ class NanoString:
             samples.append(sample)
         setattr(self, "samples", samples)
 
-    def raw_counts(self):
-        df = self.samples[0].code_summary
+    def compile_samples(self, attribute):
+        df = getattr(self.samples[0], attribute)
         df.columns = ["Sample 1"]
         for i, sample in enumerate(self.samples[1:]):
-            to_merge = sample.code_summary
+            to_merge = getattr(sample, attribute)
             to_merge.columns = ["Sample " + str(i + 2)]
             df = df.merge(to_merge, left_index=True, right_index=True)
         return df
 
-    def counts_norm(self, type):
+    def sample_attributes(self):
+        df = self.compile_samples("sample_attributes")
+        return df
+
+    def lane_attributes(self):
+        df = self.compile_samples("lane_attributes")
+        return df
+
+    def raw_counts(self):
+        df = self.compile_samples("code_summary")
+        return df
+
+    def counts_norm(self, type="positive"):
         valid = ["Positive", "Housekeeping"]
         if type.title() not in valid:
             raise ValueError(f"counts_norm: type must be one of {valid}.")
@@ -81,4 +93,5 @@ class NanoString:
 if __name__ == "__main__":
     rcc_dir = sys.argv[1]
     nanostring = NanoString(rcc_dir)
-    print(nanostring.counts_norm("positive"))
+    df = nanostring.counts_norm()
+    df.to_csv("test.csv")

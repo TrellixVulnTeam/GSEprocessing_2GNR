@@ -6,15 +6,6 @@ import os
 import sys
 
 
-def make_tarfile(source_dir, output_filename):
-    try:
-        with tarfile.open(output_filename, "w:gz") as tar:
-            tar.add(source_dir, arcname=os.path.basename(source_dir))
-        print(f"{source_dir} converted to .tar.gz file")
-    except Exception as e:
-        print(e)
-
-
 def make_rcc_dir(tar_file):
     tar_path, filename = os.path.split(os.path.abspath(tar_file))
     rcc_dir_name = re.search(".*[^.tar]", filename).group(0)
