@@ -40,17 +40,16 @@ def get_gse(accessionID):
 
 
 @dataclass
-class NanoString:
+class NanoStringSample:
     """Class to hold tar metadata NanoString files"""
 
-    path: str
-    filename: str
+    sample_path: str
 
     def __post_init__(self):
         """Reads each file from .tar, splits into lists per <tag> , converts to dataframe
         and adds as attribute using <tag> name.
         """
-        with gzip.open(os.path.join(self.path, self.filename), "rt") as file_in:
+        with gzip.open(self.sample_path, "rt") as file_in:
             file_in = file_in.read()
             file_in = re.split("</.*>", file_in)
             file_in = [line.split("\n") for line in file_in]
@@ -58,14 +57,21 @@ class NanoString:
                 try:
                     r = re.compile("<.*>")
                     tag = list(filter(r.match, group))[0]
+                    attr = tag[1:-1].lower()
                     data = group[group.index(tag) + 1 :]
                     data = [d.split(",") for d in data]
-                    df = pd.DataFrame(data)
-                    df.index.name = tag
-                    setattr(self, tag[1:-1], df)
+                    if attr == "code_summary":
+                        df = pd.DataFrame(data[1:], columns=data[0])
+                        df = df.set_index(["CodeClass", "Name", "Accession"])
+                        df = df.astype("float")
+                    else:
+                        df = pd.DataFrame(data)
+                        df.columns = ["Attribute", "Value"]
+                        df = df.set_index("Attribute")
+                    df.columns.name = tag
+                    setattr(self, attr, df)
                 except Exception as e:
                     pass
-        setattr(self, "metadata_keys", list(vars(self).keys()))
 
 
 def read_nanostring_tar(filename):
@@ -91,7 +97,7 @@ def read_nanostring_tar(filename):
     return samples
 
 
-def code_summary(samples):
+def raw_counts(samples):
     """Iterates through all NanoString objects and pulls the Code_Summary attribute
     dataframe which includes raw read counts. These are then all merged together to create
     one dataframe with all sample reads.
@@ -102,19 +108,16 @@ def code_summary(samples):
     Returns:
         pd.DataFrame: Singular dataframe containing Code_Summary read counts for all files
     """
-    df = samples[0].Code_Summary
-    for sample in samples[1:]:
-        to_merge = sample.Code_Summary
-        df = df.merge(to_merge, how="left", on=[0, 1, 2])
-    columns = ["Sample " + str(i) for i in range(1, 13)]
-    df.columns = ["CodeClass", "Name", "Accession"] + columns
-    df = df.drop(0)[:-1]
-    df = df.astype({column: "float" for column in columns})
-    df = df.set_index(["CodeClass", "Name", "Accession"])
+    df = samples[0].code_summary
+    df.columns = ["Sample 1"]
+    for i, sample in enumerate(samples[1:]):
+        to_merge = sample.code_summary
+        to_merge.columns = ["Sample " + str(i + 2)]
+        df = df.merge(to_merge, left_index=True, right_index=True)
     return df
 
 
-def normalize_code_summary(df):
+def raw_counts_norm(df):
     """Normalizes input df via (1) calculating sample geometric mean (gmean), (2) calculating the
     arithmetic mean of all gmeans and (3) Dividing amean by each gmean to generate a normalization
     factor for each sample. This factor is then multipled across the entire sample column. Process
@@ -141,7 +144,5 @@ def normalize_code_summary(df):
 if __name__ == "__main__":
     filename = sys.argv[1] + "_RAW.tar"
     samples = read_nanostring_tar(filename)
-    code_summary_df = code_summary(samples)
-    # code_summary_df.to_csv("df.csv")
-    df_norm = normalize_code_summary(code_summary_df)
-    df_norm.to_csv("df_norm.csv")
+    code_summary_df = raw_counts(samples)
+    df_norm = raw_counts_norm(code_summary_df)
