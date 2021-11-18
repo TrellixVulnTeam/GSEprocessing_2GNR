@@ -13,6 +13,7 @@ import gzip
 import os
 import re
 import pandas as pd
+from scipy import stats
 import sys
 
 # import shutil
@@ -68,6 +69,15 @@ class NanoString:
 
 
 def read_nanostring_tar(filename):
+    """Reads .tar file and creates directory TarFile where all tar files are extracted
+    Then iterates through all extracted files and creates NanoString objects
+
+    Args:
+        filename (str): .tar file for conversion to NanoString
+
+    Returns:
+        list: a list of NanoString objects. One NanoString is created per file
+    """
     tar = tarfile.open(filename)
     try:
         os.makedir("TarFiles")
@@ -81,9 +91,17 @@ def read_nanostring_tar(filename):
     return samples
 
 
-def final():
-    doc = sys.argv[1] + "_RAW.tar"
-    samples = read_nanostring_tar(doc)
+def code_summary(samples):
+    """Iterates through all NanoString objects and pulls the Code_Summary attribute
+    dataframe which includes raw read counts. These are then all merged together to create
+    one dataframe with all sample reads.
+
+    Args:
+        samples (list): list of NanoString objects
+
+    Returns:
+        pd.DataFrame: Singular dataframe containing Code_Summary read counts for all files
+    """
     df = samples[0].Code_Summary
     for sample in samples[1:]:
         to_merge = sample.Code_Summary
@@ -93,9 +111,37 @@ def final():
     df = df.drop(0)[:-1]
     df = df.astype({column: "float" for column in columns})
     df = df.set_index(["CodeClass", "Name", "Accession"])
-    df["Total"] = df.sum(axis=1)
-    print(df.reset_index().groupby("CodeClass").sum()["Total"])
+    return df
+
+
+def normalize_code_summary(df):
+    """Normalizes input df via (1) calculating sample geometric mean (gmean), (2) calculating the
+    arithmetic mean of all gmeans and (3) Dividing amean by each gmean to generate a normalization
+    factor for each sample. This factor is then multipled across the entire sample column. Process
+    pulled from NanoString 'Gene Expression Data Analysis Guideline' pg. 13.
+
+    Args:
+        df (pd.DataFrame): A dataframe containing raw read counts for all samples
+
+    Returns:
+        pd.DataFrame: Normalized dataframe with the respective normalization factor
+        multiplied to every cell.
+    """
+    df_pos = df.reset_index()
+    df_pos = df_pos[df_pos.CodeClass == "Positive"]
+    df_pos = df_pos.set_index(["CodeClass", "Name", "Accession"])
+    geo_mean = stats.gmean(df_pos)
+    amean = geo_mean.mean()
+    norm_factor = [amean / geo for geo in geo_mean]
+    for i, factor in enumerate(norm_factor):
+        df.iloc[:, i] = df.iloc[:, i].apply(lambda x: x * factor)
+    return df
 
 
 if __name__ == "__main__":
-    final()
+    filename = sys.argv[1] + "_RAW.tar"
+    samples = read_nanostring_tar(filename)
+    code_summary_df = code_summary(samples)
+    # code_summary_df.to_csv("df.csv")
+    df_norm = normalize_code_summary(code_summary_df)
+    df_norm.to_csv("df_norm.csv")
