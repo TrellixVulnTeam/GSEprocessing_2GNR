@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import os
 import re
 import pandas as pd
+import numpy as np
 from scipy import stats
 import sys
 
@@ -69,20 +70,21 @@ class NanoString:
         df = self.compile_samples("code_summary")
         return df
 
-    def counts_norm(self, type="positive"):
+    def counts_norm(self, type="positive", take_log=True):
         valid = ["Positive", "Housekeeping"]
         if type.title() not in valid:
             raise ValueError(f"counts_norm: type must be one of {valid}.")
 
         df = self.raw_counts()
-        df_pos = df.reset_index()
-        df_pos = df_pos[df_pos.CodeClass == type.title()]
-        df_pos = df_pos.set_index(["CodeClass", "Name", "Accession"])
+        df_pos = df.loc[df.index.get_level_values("CodeClass") == type.title()]
         geo_mean = stats.gmean(df_pos)
         amean = geo_mean.mean()
         norm_factor = [amean / geo for geo in geo_mean]
+
         for i, factor in enumerate(norm_factor):
             df.iloc[:, i] = df.iloc[:, i].apply(lambda x: x * factor)
+            if take_log:
+                df.iloc[:, i] = np.log2(df.iloc[:, i])
         if type.title() == "Positive":
             df.columns.name = "Positive Control Normalization"
         elif type.title() == "Housekeeping":
