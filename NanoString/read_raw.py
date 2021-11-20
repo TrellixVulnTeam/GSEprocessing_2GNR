@@ -70,7 +70,7 @@ class NanoString:
         df = self.compile_samples("code_summary")
         return df
 
-    def counts_norm(self, type="positive", take_log=True):
+    def counts_norm(self, type="positive", takeLog=True):
         valid = ["Positive", "Housekeeping"]
         if type.title() not in valid:
             raise ValueError(f"counts_norm: type must be one of {valid}.")
@@ -83,7 +83,7 @@ class NanoString:
 
         for i, factor in enumerate(norm_factor):
             df.iloc[:, i] = df.iloc[:, i].apply(lambda x: x * factor)
-            if take_log:
+            if takeLog:
                 df.iloc[:, i] = np.log2(df.iloc[:, i])
         if type.title() == "Positive":
             df.columns.name = "Positive Control Normalization"
@@ -95,5 +95,11 @@ class NanoString:
 if __name__ == "__main__":
     rcc_dir = sys.argv[1]
     nanostring = NanoString(rcc_dir)
-    df = nanostring.counts_norm()
-    df.to_csv("test.csv")
+    s_a = nanostring.sample_attributes()
+    s_a.to_csv("sample_attributes.csv")
+    l_a = nanostring.lane_attributes()
+    l_a.to_csv("lane_attributes.csv")
+    r_c = nanostring.raw_counts()
+    r_c.to_csv("raw_counts.csv")
+    n_c = nanostring.counts_norm()
+    n_c.to_csv("counts_norm.csv")
