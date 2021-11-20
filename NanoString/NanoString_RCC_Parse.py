@@ -43,9 +43,9 @@ class NanoString:
 
     def __post_init__(self):
         samples = []
-        for sample_filename in os.listdir(self.rcc_dir):
-            sample_path = os.path.join(self.rcc_dir, sample_filename)
-            sample = NanoStringSample(sample_path)
+        for rcc_filename in os.listdir(self.rcc_dir):
+            rcc_path = os.path.join(self.rcc_dir, rcc_filename)
+            sample = NanoStringSample(rcc_path)
             samples.append(sample)
         setattr(self, "samples", samples)
 
@@ -58,19 +58,28 @@ class NanoString:
             df = df.merge(to_merge, left_index=True, right_index=True)
         return df
 
-    def sample_attributes(self):
+    def sample_attributes(self, export=False):
         df = self.compile_samples("sample_attributes")
+        if export:
+            filename = f"{self.rcc_dir}-sample_attributes.csv"
+            df.to_csv(filename)
         return df
 
-    def lane_attributes(self):
+    def lane_attributes(self, export=False):
         df = self.compile_samples("lane_attributes")
+        if export:
+            filename = f"{self.rcc_dir}-lane_attributes.csv"
+            df.to_csv(filename)
         return df
 
-    def raw_counts(self):
+    def raw_counts(self, export=False):
         df = self.compile_samples("code_summary")
+        if export:
+            filename = f"{self.rcc_dir}-raw_counts.csv"
+            df.to_csv(filename)
         return df
 
-    def counts_norm(self, type="positive", takeLog=True):
+    def counts_norm(self, type="positive", takeLog=True, export=False):
         valid = ["Positive", "Housekeeping"]
         if type.title() not in valid:
             raise ValueError(f"counts_norm: type must be one of {valid}.")
@@ -84,22 +93,22 @@ class NanoString:
         for i, factor in enumerate(norm_factor):
             df.iloc[:, i] = df.iloc[:, i].apply(lambda x: x * factor)
             if takeLog:
-                df.iloc[:, i] = np.log2(df.iloc[:, i])
+                df.iloc[:, i] = np.where(df.iloc[:, i] > 0, np.log2(df.iloc[:, i]), -1)
         if type.title() == "Positive":
             df.columns.name = "Positive Control Normalization"
         elif type.title() == "Housekeeping":
             df.columns.name = "CodeSet Content Normalization"
+
+        if export:
+            filename = f"{self.rcc_dir}-counts_norm-{type.title()}.csv"
+            df.to_csv(filename)
         return df
 
 
 if __name__ == "__main__":
     rcc_dir = sys.argv[1]
     nanostring = NanoString(rcc_dir)
-    s_a = nanostring.sample_attributes()
-    s_a.to_csv("sample_attributes.csv")
-    l_a = nanostring.lane_attributes()
-    l_a.to_csv("lane_attributes.csv")
-    r_c = nanostring.raw_counts()
-    r_c.to_csv("raw_counts.csv")
-    n_c = nanostring.counts_norm()
-    n_c.to_csv("counts_norm.csv")
+    # nanostring.sample_attributes()
+    # nanostring.lane_attributes()
+    nanostring.raw_counts(export=True)
+    nanostring.counts_norm(takeLog=True, export=True)
