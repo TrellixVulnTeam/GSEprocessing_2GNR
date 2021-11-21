@@ -1,4 +1,0 @@
-Using nSolver software, QC  was carried out using default QC parameter settings. 
-Then, raw data files were examined to ensure that counts of positive and negative controls as well as housekeeping/endogenous genes meet expectations. 
-Thereafter, background noise was adjusted by background thresholding using a user-defined threshold count value of 20 counts. 
-Normalization was accomplished using the geometric mean of the positive control counts, and housekeeping genes in the CodeSet Content. Differential expression was calculated by specifying NK alone samples as the baseline of the experiment using nSolver software.

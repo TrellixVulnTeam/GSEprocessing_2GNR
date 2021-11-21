@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-import os
-import re
+from bs4 import BeautifulSoup
+from io import StringIO
 import pandas as pd
 import numpy as np
 from scipy import stats
+import os
 import sys
 
 
@@ -13,28 +14,21 @@ class NanoStringSample:
 
     def __post_init__(self):
         with open(self.sample_path) as file_in:
-            file_in = file_in.read()
-        file_in = re.split("</.*>", file_in)
-        file_in = [line.split("\n") for line in file_in]
-        for group in file_in:
-            try:
-                r = re.compile("<.*>")
-                tag = list(filter(r.match, group))[0]
-                attr = tag[1:-1].lower()
-                data = group[group.index(tag) + 1 :]
-                data = [d.split(",") for d in data]
-                if attr == "code_summary":
-                    df = pd.DataFrame(data[1:], columns=data[0])
-                    df = df.set_index(["CodeClass", "Name", "Accession"])
-                    df = df.astype("float")
-                else:
-                    df = pd.DataFrame(data)
-                    df.columns = ["Attribute", "Value"]
-                    df = df.set_index("Attribute")
-                df.columns.name = attr
-                setattr(self, attr, df)
-            except Exception as e:
-                pass
+            soup = BeautifulSoup(file_in.read(), "html.parser")
+        tags = [tag.name for tag in soup.find_all()]
+        for tag in tags:
+            tag_string = getattr(soup, tag).string.strip()
+            tag_string = StringIO(tag_string)
+            if tag == "code_summary":
+                df = pd.read_csv(tag_string)
+                df = df[df["Name"].notnull()]
+                df = df.set_index(["CodeClass", "Name", "Accession"])
+                df = df.astype("float")
+            else:
+                df = pd.read_csv(tag_string, names=["Attribute", "Value"])
+                df = df.set_index("Attribute")
+            df.columns.name = tag
+            setattr(self, tag, df)
 
 
 @dataclass
@@ -108,7 +102,8 @@ class NanoString:
 if __name__ == "__main__":
     rcc_dir = sys.argv[1]
     nanostring = NanoString(rcc_dir)
-    # nanostring.sample_attributes()
-    # nanostring.lane_attributes()
-    nanostring.raw_counts(export=True)
-    nanostring.counts_norm(takeLog=True, export=True)
+    print(nanostring.counts_norm())
+    # nanostring.sample_attributes(export=True)
+    # nanostring.lane_attributes(export=True)
+    # nanostring.raw_counts(export=True)
+    # nanostring.counts_norm(takeLog=True, export=True)
