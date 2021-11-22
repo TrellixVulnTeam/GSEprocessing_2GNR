@@ -1,3 +1,10 @@
+"""The following script takes a GSE identification and using GEOParse downloads the .soft.gz file. From this file, 
+four files are created to initiate Boolean Implication Analysis network. These files are used in the supplementary 
+gse_processing bash script to generate the network.
+
+Returns:
+    [type]: [description]
+"""
 from dataclasses import dataclass
 import GEOparse
 from GEOparse.GEOTypes import GSE
@@ -137,7 +144,7 @@ class NCBIGeo:
 
     def export_all(self):
         for _, gpl in self.gse.gpls.items():
-            self.soft_file_txt()
+            # self.soft_file_txt()
             self.make_expr(gpl, takeLog=True, export=True)
             self.make_idx(gpl, export=True)
             self.make_survival(gpl, export=True)
