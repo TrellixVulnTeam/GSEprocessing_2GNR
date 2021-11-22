@@ -1,3 +1,12 @@
+"""Parse a directory of raw .RCC files (12 per NanoString read). The directory is converted toa NanoString class
+where each of the 12 files are converted to a NanoStringSample class and parsed into one DataFrame per html tag.
+The NanoString class then compiles the individual attributes of each NanoStringSample into one dataframe per overall
+attribute
+
+Returns:
+    NanoString: A class that includes all 12 NanoString samples and relevant attributes that compile all sample info
+    into compiled dataframes. Methods include raw_count and counts normalized.
+"""
 from dataclasses import dataclass
 from bs4 import BeautifulSoup
 from io import StringIO
@@ -29,11 +38,25 @@ class NanoStringSample:
                 df = df.set_index("Attribute")
             df.columns.name = tag
             setattr(self, tag, df)
+        id = self.lane_attributes.loc["ID"][0]
+        setattr(self, "ID", id)
 
 
 @dataclass
 class NanoString:
     rcc_dir: str
+
+    def compile_samples(self, attribute):
+        df = getattr(self.samples[0], attribute)
+        id = self.samples[0].ID
+        df.columns = ["Sample " + id]
+        for sample in self.samples[1:]:
+            to_merge = getattr(sample, attribute)
+            to_merge.columns = ["Sample " + sample.ID]
+            df = df.merge(to_merge, left_index=True, right_index=True)
+        cols = sorted(df.columns, key=lambda x: int(x.split(" ")[1]))
+        df = df.reindex(cols, axis=1)
+        return df
 
     def __post_init__(self):
         samples = []
@@ -43,42 +66,23 @@ class NanoString:
             samples.append(sample)
         setattr(self, "samples", samples)
 
-    def compile_samples(self, attribute):
-        df = getattr(self.samples[0], attribute)
-        df.columns = ["Sample 1"]
-        for i, sample in enumerate(self.samples[1:]):
-            to_merge = getattr(sample, attribute)
-            to_merge.columns = ["Sample " + str(i + 2)]
-            df = df.merge(to_merge, left_index=True, right_index=True)
-        return df
-
-    def sample_attributes(self, export=False):
-        df = self.compile_samples("sample_attributes")
-        if export:
-            filename = f"{self.rcc_dir}-sample_attributes.csv"
-            df.to_csv(filename)
-        return df
-
-    def lane_attributes(self, export=False):
-        df = self.compile_samples("lane_attributes")
-        if export:
-            filename = f"{self.rcc_dir}-lane_attributes.csv"
-            df.to_csv(filename)
-        return df
-
-    def raw_counts(self, export=False):
-        df = self.compile_samples("code_summary")
-        if export:
-            filename = f"{self.rcc_dir}-raw_counts.csv"
-            df.to_csv(filename)
-        return df
+        attrs = []
+        for sample in self.samples:
+            for attr in vars(sample).keys():
+                if attr not in attrs:
+                    attrs.append(attr)
+        attrs.remove("sample_path")
+        attrs.remove("ID")
+        for attr in attrs:
+            df = self.compile_samples(attr)
+            setattr(self, attr, df)
 
     def counts_norm(self, type="positive", takeLog=True, export=False):
         valid = ["Positive", "Housekeeping"]
         if type.title() not in valid:
             raise ValueError(f"counts_norm: type must be one of {valid}.")
 
-        df = self.raw_counts()
+        df = self.code_summary
         df_pos = df.loc[df.index.get_level_values("CodeClass") == type.title()]
         geo_mean = stats.gmean(df_pos)
         amean = geo_mean.mean()
@@ -98,12 +102,19 @@ class NanoString:
             df.to_csv(filename)
         return df
 
+    def export(self, attr):
+        df = getattr(self, attr)
+        filename = f"{self.rcc_dir}-{attr}.csv"
+        df.to_csv(filename)
+
+    def export_all(self):
+        dont_export = ["rcc_dir", "samples", "header", "messages"]
+        for attr in vars(self).keys():
+            if attr not in dont_export:
+                self.export(attr)
+
 
 if __name__ == "__main__":
     rcc_dir = sys.argv[1]
     nanostring = NanoString(rcc_dir)
-    print(nanostring.counts_norm())
-    # nanostring.sample_attributes(export=True)
-    # nanostring.lane_attributes(export=True)
-    # nanostring.raw_counts(export=True)
-    # nanostring.counts_norm(takeLog=True, export=True)
+    nanostring.export_all()
