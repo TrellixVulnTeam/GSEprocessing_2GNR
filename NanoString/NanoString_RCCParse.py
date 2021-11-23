@@ -13,6 +13,8 @@ from io import StringIO
 import pandas as pd
 import numpy as np
 from scipy import stats
+import glob
+import pathlib
 import os
 import sys
 
@@ -47,22 +49,22 @@ class NanoString:
     rcc_dir: str
 
     def compile_samples(self, attribute):
-        df = getattr(self.samples[0], attribute)
-        id = self.samples[0].ID
-        df.columns = ["Sample " + id]
-        for sample in self.samples[1:]:
+        for sample in self.samples:
             to_merge = getattr(sample, attribute)
             to_merge.columns = ["Sample " + sample.ID]
-            df = df.merge(to_merge, left_index=True, right_index=True)
+            if "df" not in locals():
+                df = to_merge
+            else:
+                df = df.merge(to_merge, left_index=True, right_index=True)
+
         cols = sorted(df.columns, key=lambda x: int(x.split(" ")[1]))
         df = df.reindex(cols, axis=1)
         return df
 
     def __post_init__(self):
         samples = []
-        for rcc_filename in os.listdir(self.rcc_dir):
-            rcc_path = os.path.join(self.rcc_dir, rcc_filename)
-            sample = NanoStringSample(rcc_path)
+        for rcc_file in glob.glob(os.path.join(self.rcc_dir, "*.RCC")):
+            sample = NanoStringSample(rcc_file)
             samples.append(sample)
         setattr(self, "samples", samples)
 
@@ -85,8 +87,8 @@ class NanoString:
         df = self.code_summary
         df_pos = df.loc[df.index.get_level_values("CodeClass") == type.title()]
         geo_mean = stats.gmean(df_pos)
-        amean = geo_mean.mean()
-        norm_factor = [amean / geo for geo in geo_mean]
+        a_mean = geo_mean.mean()
+        norm_factor = [a_mean / geo for geo in geo_mean]
 
         for i, factor in enumerate(norm_factor):
             df.iloc[:, i] = df.iloc[:, i].apply(lambda x: x * factor)
@@ -96,19 +98,17 @@ class NanoString:
             df.columns.name = "Positive Control Normalization"
         elif type.title() == "Housekeeping":
             df.columns.name = "CodeSet Content Normalization"
-
-        if export:
-            filename = f"{self.rcc_dir}-counts_norm-{type.title()}.csv"
-            df.to_csv(filename)
+        setattr(self, "counts_norm", df)
         return df
 
     def export(self, attr):
         df = getattr(self, attr)
-        filename = f"{self.rcc_dir}-{attr}.csv"
+        dir_name = pathlib.Path(self.rcc_dir).stem
+        filename = f"{dir_name}-{attr}.csv"
         df.to_csv(filename)
 
     def export_all(self):
-        dont_export = ["rcc_dir", "samples", "header", "messages"]
+        dont_export = ["rcc_dir", "samples", "header", "messages", "counts_norm"]
         for attr in vars(self).keys():
             if attr not in dont_export:
                 self.export(attr)
@@ -117,4 +117,4 @@ class NanoString:
 if __name__ == "__main__":
     rcc_dir = sys.argv[1]
     nanostring = NanoString(rcc_dir)
-    nanostring.export_all()
+    nanostring.export("code_summary")

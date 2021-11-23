@@ -45,7 +45,6 @@ class NCBIGeo:
         Returns:
             pandas.DataFrame: DataFrame of .soft file expression data
         """
-        expr_df = pd.DataFrame()
         for name, gsm in self.gse.gsms.items():
             gsm_gpl = gsm.metadata["platform_id"][0]
             if gsm_gpl != gpl.name:
@@ -56,7 +55,8 @@ class NCBIGeo:
 
             if takeLog:
                 gsm_df[name] = np.where(gsm_df[name] > 0, np.log2(gsm_df[name]), -1)
-            if expr_df.empty:
+
+            if "expr_df" not in locals():
                 expr_df = gsm_df
             else:
                 expr_df = expr_df.merge(gsm_df, left_index=True, right_index=True)
@@ -120,41 +120,48 @@ class NCBIGeo:
 
         all_metadata = {}
         for name, gsm in self.gse.gsms.items():
+            # confirm gsm is associated with input gpl
             gsm_gpl = gsm.metadata["platform_id"][0]
             if gsm_gpl != gpl.name:
                 continue
+
+            # remove keys from metadata that aren't desired in survival
             metadata = gsm.metadata.copy()
             for key in gsm.metadata:
                 for drop in to_drop:
                     if re.search(drop, key):
                         metadata.pop(key, None)
             all_metadata[name] = metadata
+        all_metadata = pd.DataFrame(all_metadata).T
 
-        df = pd.DataFrame(all_metadata).T
-        survival_df = pd.DataFrame()
-        for column in df.columns:
-            df[column] = df[column].apply(lambda x: "\t".join(x))
-            to_merge = df[column].str.split("\t", expand=True)
+        for column in metadata.columns:
+            # split columns with list values into seperate columns
+            all_metadata[column] = all_metadata[column].apply(lambda x: "\t".join(x))
+            to_merge = all_metadata[column].str.split("\t", expand=True)
             if len(to_merge.columns) > 1:
-                col_names = []
-                for col in to_merge.columns:
-                    value = to_merge[col].str.extract(r"(.*:)").iloc[0, 0][:-1]
-                    col_names.append(value)
+                col_names = [str(i + 1) for i in range(len(to_merge.columns))]
+                col_names = [column + "_" + name for name in col_names]
                 to_merge.columns = col_names
             else:
                 to_merge.columns = [column]
-            if survival_df.empty:
-                survival_df = to_merge
+
+            if "df" not in locals():
+                df = to_merge
             else:
-                survival_df = survival_df.merge(
-                    to_merge, left_index=True, right_index=True
-                )
-        survival_df.index.name = "ArrayID"
+                df = df.merge(to_merge, left_index=True, right_index=True)
+        df.index.name = "ArrayID"
+
+        for column in df.columns:
+            # rename columns with cell value label
+            if df[column].str.contains(":").all():
+                value = df[column].str.extract(r"(.*:)").iloc[0, 0][:-1]
+                df = df.rename(columns={column: value})
+                df[value] = df[value].str.extract(r".*: (.*)")
 
         if export:
             survival_filename = f"{self.accessionID}-{gpl.name}-survival.txt"
-            survival_df.to_csv(survival_filename, sep="\t")
-        return survival_df
+            df.to_csv(survival_filename, sep="\t")
+        return df
 
     def make_ih(self, gpl, export=False):
         survival_df = self.make_survival(gpl).reset_index()
