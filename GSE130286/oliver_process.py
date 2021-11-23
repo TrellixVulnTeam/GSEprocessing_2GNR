@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import GEOparse
 from GEOparse.GEOTypes import GSE
 import pandas as pd
+import os
 import sys
 import re
 import gzip
@@ -45,22 +46,25 @@ class NCBIGeo:
         Returns:
             pandas.DataFrame: DataFrame of .soft file expression data
         """
-        for name, gsm in self.gse.gsms.items():
-            gsm_gpl = gsm.metadata["platform_id"][0]
-            if gsm_gpl != gpl.name:
-                continue
+        expr_file = f"{self.accessionID}-{gpl.name}-survival.txt"
+        if os.path.exists(expr_file):
+            expr_df = pd.read_csv(expr_file, sep="\t")
+        else:
+            for name, gsm in self.gse.gsms.items():
+                gsm_gpl = gsm.metadata["platform_id"][0]
+                if gsm_gpl != gpl.name:
+                    continue
 
-            gsm_df = gsm.table.set_index("ID_REF")
-            gsm_df.columns = [name]
+                gsm_df = gsm.table.set_index("ID_REF")
+                gsm_df.columns = [name]
 
-            if takeLog:
-                gsm_df[name] = np.where(gsm_df[name] > 0, np.log2(gsm_df[name]), -1)
+                if takeLog:
+                    gsm_df[name] = np.where(gsm_df[name] > 0, np.log2(gsm_df[name]), -1)
 
-            if "expr_df" not in locals():
-                expr_df = gsm_df
-            else:
-                expr_df = expr_df.merge(gsm_df, left_index=True, right_index=True)
-
+                if "expr_df" not in locals():
+                    expr_df = gsm_df
+                else:
+                    expr_df = expr_df.merge(gsm_df, left_index=True, right_index=True)
         return expr_df
 
     def make_idx(self, gpl):
