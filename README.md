@@ -1,6 +1,6 @@
 # GSEprocessing
 
-This repo contains proccessing scripts to parse either NCBI GEO RNA-seq data, NCBI GEO MicroArray data, NCBI GEO NanoString data, or raw NanoString data into four working files for the Boolean Lab Hegemon. The working files include:
+This repo contains proccessing scripts to parse either NCBI GEO RNA-seq data, NCBI GEO MicroArray data, NCBI GEO NanoString data, or raw NanoString data into four working .txt files for the Boolean Lab Hegemon. The working files include:
 > 1. expression (expr) file containing all genes and normalized expressoin data 
 > 2. index file containing binary location for the expression file 
 > 3. survival file containing metadata for the expression file
