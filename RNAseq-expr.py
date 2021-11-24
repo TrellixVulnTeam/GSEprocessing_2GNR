@@ -17,12 +17,17 @@ class RNASeqExpr:
 
         gse = GEOparse.get_GEO(geo=self.accessionID, silent=True)
         self.gse = gse
-    
+
     def preprocess(self):
+        """This will differ for every input.
+
+        Returns:
+            pd.DataFrame: a precursor to raw counts dataframe
+        """
         df = pd.read_excel(self.file_in)
         df = df.rename(columns={"Id": "Name", "KNalone_2": "NKalone_2"})
         df = df.set_index("Name")
-        df = df.iloc[:,:12]
+        df = df.iloc[:, :12]
 
         col_names = []
         for col in df.columns:
@@ -34,14 +39,20 @@ class RNASeqExpr:
             if "INB" in col:
                 col = col.replace("INB16", "CTV-1")
             col_names.append(col)
-        
+
         df.columns = col_names
         return df
 
     def counts(self):
+        """returns raw counts data frame with ProbeID
+
+        Returns:
+            pd.DataFrame: Raw counts not yet normalized or log2
+        """
         df = self.preprocess()
 
         if "ProbeID" not in df.columns:
+            # merge with reference file containing gene names and ENSG
             ensg_file = "~/GSE_Processing/HomoSapiens_ENST,ProbeID,Name.txt"
             ensg_df = pd.read_csv(ensg_file, sep="\t", header=0)
             ensg_df = ensg_df.drop("ENST", axis=1)
@@ -51,6 +62,7 @@ class RNASeqExpr:
 
         col_rename = {}
         for name, gsm in self.gse.gsms.items():
+            # map gsm name to sample title
             col_rename[gsm.metadata["title"][0]] = name
         df = df.rename(columns=col_rename)
         return df
