@@ -1,3 +1,6 @@
 Parkinsons
 MAYO111621
 *.gz
+.venv
+__pycache__
+Datasets/
