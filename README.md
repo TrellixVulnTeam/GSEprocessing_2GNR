@@ -1,9 +1,12 @@
 # GSEprocessing
 
 This repo contains proccessing scripts to parse either NCBI GEO RNA-seq data, NCBI GEO MicroArray data, NCBI GEO NanoString data, or raw NanoString data into four working files for the Boolean Lab Hegemon. The working files include:
-> 1. expression file containing all genes and normalized expressoin data (2) index file containing binary location for the expression file (3) survival file containing metadata for the expression file and (4) indexHeader file linking NCBI GSM name to sample names.
+> 1. expression file containing all genes and normalized expressoin data 
+> 2. index file containing binary location for the expression file 
+> 3. survival file containing metadata for the expression file
+> 4. indexHeader file linking NCBI GSM name to sample names
 
-## Below is a list of all files in the repo
+## Descriptio of all files in the repo
 
 1. HegemonFiles.py takes a GEO AccessionID and parses the .soft.gz file into relevant expression and metadata. This is converted into the four hegemon files
 2. HegemonFiles_process bash script to run all files in Boolean Lab ssh
