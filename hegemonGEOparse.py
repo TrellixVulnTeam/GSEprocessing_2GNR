@@ -66,7 +66,7 @@ class NCBIGeo:
                     expr_df = expr_df.merge(gsm_df, left_index=True, right_index=True)
         return expr_df
 
-    def index(self, gpl):
+    def idx(self, gpl):
         """Makes idx dataframe including binary expression information for Boolean Network
 
         Args:
@@ -169,7 +169,7 @@ class NCBIGeo:
 
         return df
 
-    def indexHeader(self, gpl):
+    def ih(self, gpl):
         """DataFrame maps GSM name to sample name
 
         Args:
@@ -192,7 +192,7 @@ class NCBIGeo:
             takeLog (bool): If true, take log of all expr data. Defaults to False
         """
         for _, gpl in self.gse.gpls.items():
-            for method in ["expr", "index", "survival", "indexHeader"]:
+            for method in ["expr", "idx", "survival", "ih"]:
                 func = getattr(self, method)
                 if method == "expr":
                     func = func(gpl, takeLog=takeLog)
@@ -205,9 +205,11 @@ class NCBIGeo:
             with open("explore.txt", "w") as file_out:
                 file_out.write("[]\n")
                 file_out.write("name=\n")
-                for name in ["expr", "index", "survival", "indexHeader", "info"]:
-                    file = f"{self.accessionID}-{gpl.name}-{name}.txt"
-                    filepath = os.path.join(os.getcwd(), file)
+                names = ["expr", "index", "survival", "indexHeader", "info"]
+                file_ends = ["expr", "idx", "survival", "ih", "info"]
+                for name, file_end in zip(names, file_ends):
+                    my_file = f"{self.accessionID}-{gpl.name}-{file_end}.txt"
+                    filepath = os.path.join(os.getcwd(), my_file)
                     file_out.write(f"{name}={filepath}\n")
                 file_out.write("key=\n")
                 file_out.write(f"source={self.accessionID}")

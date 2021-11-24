@@ -53,7 +53,7 @@ class RNASeqExpr:
 
         if "ProbeID" not in df.columns:
             # merge with reference file containing gene names and ENSG
-            ensg_file = "~/GSE_Processing/HomoSapiens_ENST,ProbeID,Name.txt"
+            ensg_file = "~/GSEprocessing/HomoSapiens_ENST,ProbeID,Name.txt"
             ensg_df = pd.read_csv(ensg_file, sep="\t", header=0)
             ensg_df = ensg_df.drop("ENST", axis=1)
 

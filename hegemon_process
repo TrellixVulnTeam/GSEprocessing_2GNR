@@ -7,12 +7,26 @@ mkdir -p $GSE
 
 cd $GSE
 
-cp -Rup ~/GSEprocessing/HegemonGEOparse.py .
+cp -Rup ~/GSEprocessing/hegemonGEOparse.py .
 cp -Rup ~/GSEprocessing/HomoSapiens_ENST,ProbeID,Name.txt .
+cp -Rup ~/GSEprocessing/gse_processing .
 
-python3 HegemonFiles.py $GSE
+python3 hegemonGEOparse.py $GSE
+
+if [ $? -ne 0 ];
+then
+	echo "process.py failed"
+	rm HomoSapiens_ENST,ProbeID,Name.txt
+	rm hegemonGEOparse.py
+	rm gse_processing
+	exit
+fi
 
 rm HomoSapiens_ENST,ProbeID,Name.txt
-rm HegemonGEOparse.py 
+rm hegemonGEOparse.py 
+
+bash gse_processing
+
+rm gse_processing
 
 cd ..
