@@ -1,3 +1,9 @@
 # GSEprocessing
 
-This repo contains a GSEprocess directory which contains several scripts used to process biological data. Please read the .README in the GSEprocessing repo for more information.
+This repo contains a GSEprocess directory which contains several scripts used to process biological data. 
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
