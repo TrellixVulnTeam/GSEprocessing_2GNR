@@ -1,4 +1,5 @@
 #!/bin/bash
+# for use in hegemon.ucsd.edu ssh
 args=("$@")
 GSE=${args[0]}
 
