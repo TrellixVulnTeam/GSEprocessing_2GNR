@@ -1,13 +1,9 @@
-"""Parse a .tar or .tar.gz file into an folder containing unzipped RCC files for use in the NanoString RCCParse script.
-"""
-
 import tarfile
 import re
 import glob
 import gzip
 import pathlib
 import os
-import sys
 
 
 def make_rcc_dir(tar_file):
@@ -25,6 +21,7 @@ def make_rcc_dir(tar_file):
     rcc_dir_name = re.search(".*[^.tar]", filename).group(0)
     rcc_dir_name = rcc_dir_name + "_RCC"
     rcc_dir = os.path.join(tar_path, rcc_dir_name)
+
     try:
         os.mkdir(rcc_dir)
     except:
@@ -32,10 +29,11 @@ def make_rcc_dir(tar_file):
 
     with tarfile.open(tar_file) as tar:
         tar.extractall(rcc_dir)
+
     return rcc_dir
 
 
-def gunzip_files(my_dir):
+def gunzip_files(my_dir: str) -> None:
     """Unzips any gzipped files in the given directory
 
     Args:
@@ -54,9 +52,3 @@ def gunzip_files(my_dir):
             os.remove(gzip_file)
         except Exception as e:
             print(e)
-
-
-if __name__ == "__main__":
-    file = sys.argv[1]
-    rcc_dir = make_rcc_dir(file)
-    gunzip_files(rcc_dir)

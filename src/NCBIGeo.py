@@ -5,6 +5,7 @@ From this file, four files are created to initiate Boolean Implication Analysis 
 files are used in the supplementary gse_processing bash script to generate the network.
 """
 from dataclasses import dataclass
+from typing import Any
 import GEOparse
 from GEOparse.GEOTypes import GSE
 import pandas as pd
@@ -29,7 +30,7 @@ class NCBIGeo:
         gse = GEOparse.get_GEO(geo=str(self.accessionID), silent=True)
         setattr(self, "gse", gse)
 
-    def expr(self, gpl, takeLog=False):
+    def expr(self, gpl: Any, takeLog: bool = False) -> pd.DataFrame:
         """Pulls expression data from .soft file
 
         Args:
@@ -58,12 +59,16 @@ class NCBIGeo:
 
                 if takeLog:
                     # take log base two of all expr values
-                    gsm_df[name] = np.where(gsm_df[name] > 0, np.log2(gsm_df[name]), -1)
+                    gsm_df[name] = np.where(
+                        gsm_df[name] > 0, np.log2(gsm_df[name]), -1
+                    )
 
                 if "expr_df" not in locals():
                     expr_df = gsm_df
                 else:
-                    expr_df = expr_df.merge(gsm_df, left_index=True, right_index=True)
+                    expr_df = expr_df.merge(
+                        gsm_df, left_index=True, right_index=True
+                    )
         return expr_df
 
     def index(self, gpl):
@@ -95,7 +100,9 @@ class NCBIGeo:
                     split = line.decode("utf-8").split("\t")
                     idx["ProbeID"].append(split[0])
                     idx["Name"].append(split[1].split(":")[0])
-                    idx["Description"].append(":".join(split[1].split(":")[1:]))
+                    idx["Description"].append(
+                        ":".join(split[1].split(":")[1:])
+                    )
 
         idx_df = pd.DataFrame(idx).set_index("ProbeID")
 
@@ -141,7 +148,9 @@ class NCBIGeo:
 
         all_metadata = pd.DataFrame(all_metadata).T
         # convert all list values into string
-        all_metadata = all_metadata.applymap(lambda x: "\t".join(x), na_action="ignore")
+        all_metadata = all_metadata.applymap(
+            lambda x: "\t".join(x), na_action="ignore"
+        )
 
         for column in all_metadata.columns:
             # split columns with multiple values into seperate columns
@@ -202,18 +211,20 @@ class NCBIGeo:
                 func.to_csv(filename, sep="\t")
 
             # create explore.txt file to copy paste into explore.conf
+            # explore.txt gets overwritten each time the loop iterates
+            # change to "a" mode or open at beginning of loop
             with open("explore.txt", "w") as file_out:
                 file_out.write("[]\n")
                 file_out.write("name=\n")
-                for name in ["expr", "index", "survival", "indexHeader", "info"]:
+                for name in [
+                    "expr",
+                    "index",
+                    "survival",
+                    "indexHeader",
+                    "info",
+                ]:
                     file = f"{self.accessionID}-{gpl.name}-{name}.txt"
                     filepath = os.path.join(os.getcwd(), file)
                     file_out.write(f"{name}={filepath}\n")
                 file_out.write("key=\n")
                 file_out.write(f"source={self.accessionID}")
-
-
-if __name__ == "__main__":
-    gse = sys.argv[1]
-    ncbi = NCBIGeo(gse)
-    ncbi.export_all(takeLog=False)
