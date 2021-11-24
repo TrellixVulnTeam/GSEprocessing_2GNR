@@ -1,6 +1,6 @@
-"""The following script takes a GSE identification and using GEOParse downloads the .soft.gz file. From this file, 
-four files are created to initiate Boolean Implication Analysis network. These files are used in the supplementary 
-gse_processing bash script to generate the network.
+"""The following script takes a GSE AccessionID and downloads the .soft.gz file using GEOParse. 
+From this file, four files are created to initiate Boolean Implication Analysis network. These 
+files are used in the supplementary gse_processing bash script to generate the network.
 """
 from dataclasses import dataclass
 import GEOparse
@@ -9,16 +9,15 @@ import pandas as pd
 import os
 import sys
 import re
-import gzip
-import shutil
 import numpy as np
 
 
 @dataclass
 class NCBIGeo:
-    """Takes a GSE Accession ID string and uses GEOParse module to pull .soft.gz file from NCBI Geo. The gse object is
-    assigned as an attribute to the class. Five methods are available to create five files for export, four of which are
-    required for the boolean implication analysis network.
+    """Takes a GSE Accession ID string and uses GEOParse module to pull .soft.gz file from NCBI
+    Geo. The gse object is assigned as an attribute to the class. Five methods are available to
+    create five files for export, four of which are required for the boolean implication analysis
+    network.
     """
 
     accessionID: str
@@ -40,12 +39,14 @@ class NCBIGeo:
             pandas.DataFrame: DataFrame of .soft file expression data
         """
         expr_file = f"{self.accessionID}-{gpl.name}-expr.txt"
+        # if file exists, as in RNA-seq, use existing file
         if os.path.exists(expr_file):
             print("expr file exists")
             expr_df = pd.read_csv(expr_file, sep="\t")
             expr_df = expr_df.set_index(["ProbeID", "Name"])
         else:
             for name, gsm in self.gse.gsms.items():
+                # confirm that gsm correlates to called gpl
                 gsm_gpl = gsm.metadata["platform_id"][0]
                 if gsm_gpl != gpl.name:
                     continue
@@ -54,6 +55,7 @@ class NCBIGeo:
                 gsm_df.columns = [name]
 
                 if takeLog:
+                    # take log base two of all expr values
                     gsm_df[name] = np.where(gsm_df[name] > 0, np.log2(gsm_df[name]), -1)
 
                 if "expr_df" not in locals():
@@ -98,6 +100,14 @@ class NCBIGeo:
         return idx_df
 
     def survival(self, gpl):
+        """Creates metadata information for each GSM (sample)
+
+        Args:
+            gpl (string): gpl name associated
+
+        Returns:
+            pd.DataFrame: survival dataframe including all samples and metadata
+        """
         to_drop = [
             "geo_accession",
             "status",
@@ -128,12 +138,14 @@ class NCBIGeo:
             all_metadata[name] = metadata
 
         all_metadata = pd.DataFrame(all_metadata).T
+        # convert all list values into string
         all_metadata = all_metadata.applymap(lambda x: "\t".join(x), na_action="ignore")
 
         for column in all_metadata.columns:
-            # split columns with list values into seperate columns
+            # split columns with multiple values into seperate columns
             to_merge = all_metadata[column].str.split("\t", expand=True)
             if len(to_merge.columns) > 1:
+                # create column names for additional columns
                 col_names = [str(i + 1) for i in range(len(to_merge.columns))]
                 col_names = [column + "_" + name for name in col_names]
                 to_merge.columns = col_names
@@ -156,6 +168,14 @@ class NCBIGeo:
         return df
 
     def indexHeader(self, gpl):
+        """DataFrame maps GSM name to sample name
+
+        Args:
+            gpl (str): gpl name associated with gsm
+
+        Returns:
+            pd.DataFrame: DataFrame mapping GSM name to sample name
+        """
         survival_df = self.survival(gpl).reset_index()
         ih_df = survival_df[["ArrayID", "title"]]
         ih_df.insert(1, "ArrayHeader", ih_df["ArrayID"])
@@ -163,7 +183,12 @@ class NCBIGeo:
 
         return ih_df
 
-    def export_all(self, takeLog):
+    def export_all(self, takeLog=False):
+        """export all files and create an explore.txt file to copy paste into explore.conf
+
+        Args:
+            takeLog (bool): If true, take log of all expr data. Defaults to False
+        """
         for _, gpl in self.gse.gpls.items():
             for method in ["expr", "index", "survival", "indexHeader"]:
                 func = getattr(self, method)
