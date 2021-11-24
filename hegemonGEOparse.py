@@ -1,4 +1,6 @@
-"""The following script takes a GSE AccessionID and downloads the .soft.gz file using GEOParse. 
+"""The following script takes a GSE AccessionID and downloads the .soft.gz file using GEOParse.
+Confirmed to work with https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE129800.
+RNA-seq data will first require a counts file as count info is never in the .soft.gz file.
 From this file, four files are created to initiate Boolean Implication Analysis network. These 
 files are used in the supplementary gse_processing bash script to generate the network.
 """
