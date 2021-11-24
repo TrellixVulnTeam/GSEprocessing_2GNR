@@ -146,7 +146,11 @@ class HegemonGEOProcess:
                 df = to_merge
             else:
                 df = df.merge(to_merge, left_index=True, right_index=True)
+
         df.index.name = "ArrayID"
+        # add 'c ' label for use in hegemon
+        column = "c " + column
+        df = df.rename(columns={"c " + column for column in df.columns})
 
         for column in df.columns:
             # rename columns with cell value label
