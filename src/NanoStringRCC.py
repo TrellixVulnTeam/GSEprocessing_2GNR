@@ -11,15 +11,17 @@ from .NanoStringSample import NanoStringSample
 
 @dataclass
 class NanoStringRCC:
-    rcc_dir: str
+    input_dir: str
+    output_dir: str
 
     def __post_init__(self):
         samples = []
-        for rcc_file in glob.glob(os.path.join(self.rcc_dir, "*.RCC")):
+        for rcc_file in glob.glob(os.path.join(self.input_dir, "*.RCC")):
             sample = NanoStringSample(rcc_file)
             samples.append(sample)
-        setattr(self, "samples", samples)
+        self.samples = samples
 
+        # create list of all attributes in any sample
         attrs = []
         for sample in self.samples:
             for attr in vars(sample).keys():
@@ -27,18 +29,24 @@ class NanoStringRCC:
                     attrs.append(attr)
         attrs.remove("sample_path")
         attrs.remove("ID")
+
         for attr in attrs:
             df = self.compile_samples(attr)
             setattr(self, attr, df)
 
     def compile_samples(self, attribute: str) -> pd.DataFrame:
+        # compile same attribute for all samples into one df
         for sample in self.samples:
-            to_merge = getattr(sample, attribute)
-            to_merge.columns = ["Sample " + sample.ID]
-            if "df" not in locals():
-                df = to_merge
-            else:
-                df = df.merge(to_merge, left_index=True, right_index=True)
+            # try statement allows attributes in only some samples
+            try:
+                to_merge = getattr(sample, attribute)
+                to_merge.columns = ["Sample " + sample.ID]
+                if "df" not in locals():
+                    df = to_merge
+                else:
+                    df = df.merge(to_merge, left_index=True, right_index=True)
+            except:
+                pass
 
         cols = sorted(df.columns, key=lambda x: int(x.split(" ")[1]))
         df = df.reindex(cols, axis=1)
@@ -49,6 +57,7 @@ class NanoStringRCC:
         type: str = "positive",
         takeLog: bool = True,
     ) -> pd.DataFrame:
+
         valid = ["Positive", "Housekeeping"]
         if type.title() not in valid:
             raise ValueError(f"counts_norm: type must be one of {valid}.")
@@ -70,12 +79,12 @@ class NanoStringRCC:
         setattr(self, "counts_norm", df)
         return df
 
-    def export(self, attr: str) -> str:
+    def export(self, attr: str) -> None:
         df = getattr(self, attr)
         dir_name = pathlib.Path(self.rcc_dir).stem
         filename = f"{dir_name}-{attr}.csv"
-        df.to_csv(filename)
-        return filename
+        file_path = os.path.join(self.output_dir, filename)
+        df.to_csv(file_path)
 
     def export_all(self) -> None:
         dont_export = [
