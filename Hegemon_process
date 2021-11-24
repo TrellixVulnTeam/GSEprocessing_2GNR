@@ -7,12 +7,12 @@ mkdir -p $GSE
 
 cd $GSE
 
-cp -Rup ~/GSEprocessing/HegemonFiles.py .
+cp -Rup ~/GSEprocessing/HegemonGEOparse.py .
 cp -Rup ~/GSEprocessing/HomoSapiens_ENST,ProbeID,Name.txt .
 
 python3 HegemonFiles.py $GSE
 
 rm HomoSapiens_ENST,ProbeID,Name.txt
-rm HegemonFiles.py 
+rm HegemonGEOparse.py 
 
 cd ..
