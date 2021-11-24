@@ -17,8 +17,13 @@ class RNASeqExpr:
 
         gse = GEOparse.get_GEO(geo=self.accessionID, silent=True)
         self.gse = gse
+    
+    def preprocess(self):
+        df = pd.read_excel(self.file_in)
+        df = df.rename(columns={"Id": "Name", "KNalone_2": "NKalone_2"})
+        df = df.set_index("Name")
+        df = df.iloc[:,:12]
 
-    def rename_columns(self, df):
         col_names = []
         for col in df.columns:
             col = col.split("_")
@@ -29,16 +34,15 @@ class RNASeqExpr:
             if "INB" in col:
                 col = col.replace("INB16", "CTV-1")
             col_names.append(col)
-        return col_names
+        
+        df.columns = col_names
+        return df
 
     def counts(self):
-        df = pd.read_csv(self.file_in)
-        df = df.set_index("Name")
-
-        df.columns = self.rename_columns(df)
+        df = self.preprocess()
 
         if "ProbeID" not in df.columns:
-            ensg_file = "HomoSapiens_ENST,ProbeID,Name.txt"
+            ensg_file = "~/GSE_Processing/HomoSapiens_ENST,ProbeID,Name.txt"
             ensg_df = pd.read_csv(ensg_file, sep="\t", header=0)
             ensg_df = ensg_df.drop("ENST", axis=1)
 
