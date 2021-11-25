@@ -27,8 +27,8 @@ def tar2rcc(input_file: str) -> None:
 
 
 @main.command()
-@click.argument("input", help="directory of .RCC files")
-@click.argument("output", help="directory to file hegemon files")
+@click.argument("input")
+@click.argument("output")
 def rcc2hegemon(input: str, output: str) -> None:
     """Create hegemon files from directory of RCC files
 
