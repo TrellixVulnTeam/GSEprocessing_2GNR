@@ -1,20 +1,24 @@
 from dataclasses import dataclass
-import GEOparse
+import os
 import pandas as pd
 import scanpy as sc
 
 
 @dataclass
 class Counts2Expr:
-    accessionID: str
     file_in: str
 
     def __post_init__(self):
         if ".txt" not in self.file_in:
             raise ValueError(f"{self.file_in} must be a .txt file")
 
-        gse = GEOparse.get_GEO(geo=self.accessionID, silent=True)
-        gpl = gse.gpls.values()[0]
+        if "GSE" not in self.file_in or "GPL" not in self.file_in:
+            raise ValueError(
+                "Counts file must be formated as 'GSEXXX-GPLXXX-counts.txt"
+            )
+
+        gse, gpl, _ = os.path.split(self.file_in)[2].split("-")
+        self.gse = gse
         self.gpl = gpl
 
         df = pd.read_csv(self.file_in, sep="\t")
