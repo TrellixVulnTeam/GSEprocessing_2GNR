@@ -105,7 +105,7 @@ class NanoStringRCC:
             attr (str): attribute to export
         """
         df = getattr(self, attr)
-        dir_name = pathlib.Path(self.rcc_dir).stem
+        dir_name = pathlib.Path(self.input_dir).stem
         filename = f"{dir_name}-{attr}.csv"
         file_path = os.path.join(self.output_dir, filename)
         df.to_csv(file_path)
@@ -113,8 +113,8 @@ class NanoStringRCC:
     def export_all(self) -> None:
         """Export all attributes"""
         dont_export = [
-            "rcc_dir",
-            "samples",
+            "input_dir",
+            "output_dir" "samples",
             "header",
             "messages",
             "counts_norm",
