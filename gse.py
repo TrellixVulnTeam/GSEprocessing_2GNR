@@ -12,23 +12,9 @@ __author__ = "Oliver Tucher"
 @click.group()
 def main() -> None:
     """
-    Simple CLI for processing GSE datasets
+    CLI for processing GSE datasets and NanoString RCC data
     """
     pass
-
-
-@main.command()
-@click.argument("input_dir")
-@click.argument("output_dir")
-def rcc2hegemon(input_dir: str, output_dir: str) -> None:
-    """Creates NanoString files from directory of .RCC
-
-    Args:
-        input_dir (str): output directory for nano files
-    """
-
-    NanoStringRCC(input_dir, output_dir).export_all()
-    click.echo(f"Output directory created: {output_dir}")
 
 
 @main.command()
@@ -67,7 +53,22 @@ def tar2rcc(tar_file: str) -> None:
     """
     rcc_dir = make_rcc_dir(tar_file)
     gunzip_files(rcc_dir)
+    click.echo(f"Output filed: {rcc_dir}")
 
 
 if __name__ == "__main__":
     main()
+
+
+@main.command()
+@click.argument("input_dir")
+@click.argument("output_dir")
+def rcc2hegemon(input_dir: str, output_dir: str) -> None:
+    """Creates NanoString files from directory of .RCC
+
+    Args:
+        input_dir (str): output directory for nano files
+    """
+
+    NanoStringRCC(input_dir, output_dir).export_all()
+    click.echo(f"Output file in: {output_dir}")
