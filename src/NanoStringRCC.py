@@ -35,7 +35,14 @@ class NanoStringRCC:
             setattr(self, attr, df)
 
     def compile_samples(self, attribute: str) -> pd.DataFrame:
-        # compile same attribute for all samples into one df
+        """Compile each samples attribute into one dataframe including all samples
+
+        Args:
+            attribute (str): [description]
+
+        Returns:
+            pd.DataFrame: [description]
+        """
         for sample in self.samples:
             # try statement allows attributes in only some samples
             try:
@@ -54,9 +61,21 @@ class NanoStringRCC:
 
     def counts_norm(
         self,
-        type: str = "positive",
         takeLog: bool = True,
+        type: str = "positive",
     ) -> pd.DataFrame:
+        """Normalize the NanoString's raw counts
+
+        Args:
+            takeLog (bool, optional): take log of every count value prior to Norm. Defaults to True.
+            type (str, optional): type of normalization to be used. Defaults to "positive".
+
+        Raises:
+            ValueError: if normalization type called doesn't exist
+
+        Returns:
+            pd.DataFrame: Normalized dataframe same as input shape
+        """
 
         valid = ["Positive", "Housekeeping"]
         if type.title() not in valid:
@@ -80,6 +99,11 @@ class NanoStringRCC:
         return df
 
     def export(self, attr: str) -> None:
+        """Export to given output_dir
+
+        Args:
+            attr (str): attribute to export
+        """
         df = getattr(self, attr)
         dir_name = pathlib.Path(self.rcc_dir).stem
         filename = f"{dir_name}-{attr}.csv"
@@ -87,6 +111,7 @@ class NanoStringRCC:
         df.to_csv(file_path)
 
     def export_all(self) -> None:
+        """Export all attributes"""
         dont_export = [
             "rcc_dir",
             "samples",
