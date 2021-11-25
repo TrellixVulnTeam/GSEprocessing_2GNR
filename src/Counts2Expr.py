@@ -17,12 +17,13 @@ class Counts2Expr:
                 "Counts file must be formated as 'GSEXXX-GPLXXX-counts.txt"
             )
 
-        gse, gpl, _ = os.path.split(self.file_in)[2].split("-")
-        self.gse = gse
+        gse, gpl, _ = os.path.split(self.file_in)[1].split("-")
+        self.accessionID = gse
         self.gpl = gpl
 
+    def expr(self):
         df = pd.read_csv(self.file_in, sep="\t")
-        df = df.set_index(["Probe ID", "Name"])
+        df = df.set_index(["ProbeID", "Name"])
 
         adata = sc.AnnData(df.T)
         # adata.var_names_make_unique()
