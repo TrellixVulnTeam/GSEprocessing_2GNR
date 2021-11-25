@@ -20,7 +20,7 @@ def main() -> None:
 @main.command()
 @click.argument("input_dir")
 @click.argument("output_dir")
-def process_NanoStringRCC(input_dir: str, output_dir: str) -> None:
+def rcc2hegemon(input_dir: str, output_dir: str) -> None:
     """Creates NanoString files from directory of .RCC
 
     Args:
@@ -33,10 +33,8 @@ def process_NanoStringRCC(input_dir: str, output_dir: str) -> None:
 @main.command()
 @click.argument("accession_id")
 @click.argument("output_dir")
-@click.argument("counts_file")
-def process_GEO2Hegemon(
-    accessionID: str, output_dir: str, counts_file: str = None
-) -> None:
+@click.option("--counts_file", help="counts_file")
+def geo2hegemon(accession_id: str, output_dir: str, counts_file: str = None) -> None:
     """Create hegemon files from NCBI GEO Accession ID
 
     Args:
@@ -49,9 +47,9 @@ def process_GEO2Hegemon(
     os.chdir(output_dir)
 
     if counts_file != None:
-        Counts2Expr(accessionID, counts_file, output_dir)
+        Counts2Expr(accession_id, counts_file, output_dir)
 
-    GEO2Hegemon(accessionID).export_all()
+    GEO2Hegemon(accession_id).export_all()
 
 
 @main.command()
