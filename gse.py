@@ -1,8 +1,9 @@
 import click
+import os
 
 from src.NanoStringRCC import NanoStringRCC
-from src.HegemonGEOProcess import HegemonGEOProcess
-from src.RNASeqExpr import RNASeqExpr
+from src.GEO2Hegemon import GEO2Hegemon
+from src.Counts2Expr import Counts2Expr
 from src.tar2rcc import make_rcc_dir, gunzip_files
 
 __author__ = "Oliver Tucher"
@@ -17,26 +18,40 @@ def main() -> None:
 
 
 @main.command()
+@click.argument("input_dir")
 @click.argument("output_dir")
-def nano_run(output_dir: str) -> None:
-    """Creates nano files
+def process_NanoStringRCC(input_dir: str, output_dir: str) -> None:
+    """Creates NanoString files from directory of .RCC
 
     Args:
-        output_dir (str): output directory for nano files
+        input_dir (str): output directory for nano files
     """
-    output_file = NanoStringRCC(output_dir).export("code_summary")
-    click.echo(f"Output file created: {output_file}")
+    output_dir = NanoStringRCC(input_dir, output_dir).export_all()
+    click.echo(f"Output file created: {output_dir}")
 
 
 @main.command()
 @click.argument("accession_id")
-def hegemonGEOprocess(accession_id: str) -> None:
-    """Creates NCBI files
+@click.argument("output_dir")
+@click.argument("counts_file")
+def process_GEO2Hegemon(
+    accessionID: str, output_dir: str, counts_file: str = None
+) -> None:
+    """Create hegemon files from NCBI GEO Accession ID
 
     Args:
-        accession_id (str): id of accession
+        accessionID (str): NCBI GEO AccessionID to process
+        output_dir (str): directory to save created files
+        counts_file (str, optional): a raw counts file if required. Defaults to None.
     """
-    HegemonGEOProcess(accession_id).export_all()
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    os.chdir(output_dir)
+
+    if counts_file != None:
+        Counts2Expr(accessionID, counts_file, output_dir)
+
+    GEO2Hegemon(accessionID).export_all()
 
 
 @main.command()
@@ -49,18 +64,6 @@ def tar2rcc(tar_file: str) -> None:
     """
     rcc_dir = make_rcc_dir(tar_file)
     gunzip_files(rcc_dir)
-
-
-@main.command()
-@click.argument("input_file")
-def rna(input_file: str) -> None:
-    """Generate RNA sequence counts
-
-    Args:
-        input_file (str): input RNA file
-    """
-    pass
-    RNASeqExpr(input_file).export()
 
 
 if __name__ == "__main__":
