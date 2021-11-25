@@ -8,7 +8,6 @@ import scanpy as sc
 class Counts2Expr:
     accessionID: str
     file_in: str
-    output_dir: str
 
     def __post_init__(self):
         if ".txt" not in self.file_in:
