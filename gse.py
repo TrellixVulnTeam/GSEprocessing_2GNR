@@ -32,16 +32,21 @@ def rcc2hegemon(input_dir: str, output_dir: str) -> None:
 
 @main.command()
 @click.argument("accession_id")
-@click.argument("output_dir")
-@click.option("--counts_file", help="counts_file")
-def geo2hegemon(accession_id: str, output_dir: str, counts_file: str = None) -> None:
+@click.argument("--output", help="destination for files")
+@click.option("--counts", help="use cleaned counts file")
+def geo2hegemon(
+    accession_id: str, output_dir: str = None, counts_file: str = None
+) -> None:
     """Create hegemon files from NCBI GEO Accession ID
 
     Args:
         accessionID (str): NCBI GEO AccessionID to process
-        output_dir (str): directory to save created files
+        output_dir (str, optional): directory to save created files. Defaults to None
         counts_file (str, optional): a raw counts file if required. Defaults to None.
     """
+    if output_dir == None:
+        output_dir = accession_id
+
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
     os.chdir(output_dir)
