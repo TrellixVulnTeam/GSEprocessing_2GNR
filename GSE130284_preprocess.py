@@ -1,5 +1,6 @@
 import pandas as pd
 import GEOparse
+import sys
 
 
 class GSE130284:
@@ -56,3 +57,9 @@ class GSE130284:
         df = self.counts()
         filename = f"{self.accessionID}-{self.gpl}-counts.txt"
         df.to_csv(filename)
+
+
+if __name__ == "__main__":
+    file_in = sys.argv[1]
+    gse = GSE130284(file_in)
+    gse.export()
