@@ -148,9 +148,6 @@ class GEO2Hegemon:
                 df = df.merge(to_merge, left_index=True, right_index=True)
 
         df.index.name = "ArrayID"
-        # add 'c ' label for use in hegemon
-        column = "c " + column
-        df = df.rename(columns={"c " + column for column in df.columns})
 
         for column in df.columns:
             # rename columns with cell value label
@@ -158,6 +155,9 @@ class GEO2Hegemon:
                 value = df[column].str.extract(r"(.*:)").iloc[0, 0][:-1]
                 df = df.rename(columns={column: value})
                 df[value] = df[value].str.extract(r".*: (.*)")
+
+        # add 'c ' label for use in hegemon
+        df = df.rename(columns={col: "c " + col for col in df.columns})
 
         return df
 
@@ -171,7 +171,8 @@ class GEO2Hegemon:
             pd.DataFrame: DataFrame mapping GSM name to sample name
         """
         survival_df = self.survival(gpl).reset_index()
-        ih_df = survival_df[["ArrayID", "title"]]
+        ih_df = survival_df[["ArrayID", "c title"]]
+        ih_df.columns = ["ArrayID", "Title"]
         ih_df.insert(1, "ArrayHeader", ih_df["ArrayID"])
         ih_df = ih_df.set_index("ArrayID")
 
@@ -199,8 +200,6 @@ class GEO2Hegemon:
                 func.to_csv(filename, sep="\t")
 
             # create explore.txt file to copy paste into explore.conf
-            # explore.txt gets overwritten each time the loop iterates
-            # change to "a" mode or open at beginning of loop
             with open("explore.txt", "a") as file_out:
                 names = ["expr", "index", "survival", "indexHeader", "info"]
                 file_ends = ["expr", "idx", "survival", "ih", "info"]
