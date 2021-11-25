@@ -30,14 +30,15 @@ def geo2hegemon(accession_id: str, output: str = None, counts: str = None) -> No
         counts (str, optional): a raw counts file if required. Defaults to None.
     """
     if output == None:
-        output = accession_id
+        output = "./" + accession_id
 
     if not os.path.exists(output):
         os.mkdir(output)
-    os.chdir(output)
 
     if counts != None:
         Counts2Expr(counts).export()
+
+    os.chdir(output)
 
     GEO2Hegemon(accession_id).export_all()
     click.echo(f"Output filed in: {output}")
