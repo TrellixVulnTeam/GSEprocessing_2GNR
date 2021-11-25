@@ -1,10 +1,8 @@
 import click
 import os
 
-from src.NanoStringRCC import NanoStringRCC
 from src.GEO2Hegemon import GEO2Hegemon
 from src.Counts2Expr import Counts2Expr
-from src.tar2rcc import make_rcc_dir, gunzip_files
 
 __author__ = "Oliver Tucher"
 
