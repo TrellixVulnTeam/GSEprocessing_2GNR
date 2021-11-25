@@ -14,7 +14,7 @@ class Counts2Expr:
             raise ValueError(f"{self.file_in} must be a .txt file")
 
         gse = GEOparse.get_GEO(geo=self.accessionID, silent=True)
-        gpl = gse.gpls.items()[0][1]
+        gpl = gse.gpls.values()[0]
         self.gpl = gpl
 
         df = pd.read_csv(self.file_in, sep="\t")
