@@ -114,7 +114,8 @@ class NanoStringRCC:
         """Export all attributes"""
         dont_export = [
             "input_dir",
-            "output_dir" "samples",
+            "output_dir",
+            "samples",
             "header",
             "messages",
             "counts_norm",
