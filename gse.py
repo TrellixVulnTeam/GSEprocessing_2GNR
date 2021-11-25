@@ -12,7 +12,7 @@ __author__ = "Oliver Tucher"
 @click.group()
 def main() -> None:
     """
-    CLI for processing GSE datasets and NanoString RCC data
+    CLI for processing GSE datasets
     """
     pass
 
@@ -43,32 +43,5 @@ def geo2hegemon(accession_id: str, output: str = None, counts: str = None) -> No
     click.echo(f"Output filed in: {output}")
 
 
-@main.command()
-@click.argument("tar_file")
-def tar2rcc(tar_file: str) -> None:
-    """Parse a tar file into directory containing RCC files
-
-    Args:
-        tar_file (str): tar zipped file
-    """
-    rcc_dir = make_rcc_dir(tar_file)
-    gunzip_files(rcc_dir)
-    click.echo(f"Output filed: {rcc_dir}")
-
-
 if __name__ == "__main__":
     main()
-
-
-@main.command()
-@click.argument("input_dir")
-@click.argument("output_dir")
-def rcc2hegemon(input_dir: str, output_dir: str) -> None:
-    """Creates NanoString files from directory of .RCC
-
-    Args:
-        input_dir (str): output directory for nano files
-    """
-
-    NanoStringRCC(input_dir, output_dir).export_all()
-    click.echo(f"Output file in: {output_dir}")
