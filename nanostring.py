@@ -1,4 +1,5 @@
 import click
+import os
 
 from src.NanoStringSample import NanoStringSample
 from src.NanoStringRCC import NanoStringRCC
@@ -36,6 +37,9 @@ def rcc2hegemon(input: str, output: str) -> None:
         input (str): Directory containing RCC files
         output (str): Directory where hegemon files will be filed
     """
+    if not os.path.exists(output):
+        os.mkdir(output)
+
     NanoStringRCC(input, output).export_all()
     click.echo(f"Output file in: {output}")
 
