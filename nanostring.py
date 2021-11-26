@@ -45,3 +45,5 @@ if args.tarfile != None:
     NanoString(rcc_dir).export_all()
 elif args.directory != None:
     NanoString(args.directory).export_all()
+
+print(f"NanoString files exported to: {output_dir}")
