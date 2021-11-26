@@ -45,7 +45,7 @@ class NanoString:
             # try statement allows attributes in only some samples
             try:
                 to_merge = getattr(sample, attribute)
-                to_merge.columns = ["Sample " + sample.ID]
+                to_merge.columns = [sample.ID]
                 if "df" not in locals():
                     df = to_merge
                 else:
