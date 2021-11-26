@@ -1,48 +1,47 @@
-import click
+#!/bin/env python3
+
+import argparse
 import os
 
-from src.NanoStringSample import NanoStringSample
-from src.NanoStringRCC import NanoStringRCC
-from src.tar2rcc import make_rcc_dir, gunzip_files
+from src.NanoString import NanoString
+from src.tar2rcc import tar2rcc, gunzip
 
 __author__ = "Oliver Tucher"
 
+parser = argparse.ArgumentParser(description="CLI For NanoString RCC Processing")
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument(
+    "-d",
+    "--directory",
+    metavar="Directory of RCC files",
+    help="Directory of RCC files to be parsed",
+)
+group.add_argument(
+    "-t",
+    "--tarfile",
+    metavar="NanoString Tarfile",
+    help="NanoString Tarfile to extract (gunzip if required)",
+)
+parser.add_argument(
+    "-o",
+    "--output_dir",
+    metavar="Output Directory",
+    help="Directory location to file parsed data",
+)
 
-@click.group()
-def main() -> None:
-    """CLI for processing NanoString RCC data"""
-    pass
+args = parser.parse_args()
 
+if args.output_dir != None:
+    output_dir = args.output_dir
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    os.chdir(output_dir)
+else:
+    output_dir = "."
 
-@main.command()
-@click.argument("input_file")
-def tar2rcc(input_file: str) -> None:
-    """Extract all from .tar file and gunzip any .gz files
-
-    Args:
-        input_file (str): tarfile
-    """
-    rcc_dir = make_rcc_dir(input_file)
-    gunzip_files(rcc_dir)
-    click.echo(f"Output filed: {rcc_dir}")
-
-
-@main.command()
-@click.argument("input")
-@click.argument("output")
-def rcc2hegemon(input: str, output: str) -> None:
-    """Create hegemon files from directory of RCC files
-
-    Args:
-        input (str): Directory containing RCC files
-        output (str): Directory where hegemon files will be filed
-    """
-    if not os.path.exists(output):
-        os.mkdir(output)
-
-    NanoStringRCC(input, output).export_all()
-    click.echo(f"Output file in: {output}")
-
-
-if __name__ == "__main__":
-    main()
+if args.tarfile != None:
+    rcc_dir = tar2rcc(args.tarfile)
+    gunzip(rcc_dir)
+    NanoString(rcc_dir).export_all()
+elif args.directory != None:
+    NanoString(args.directory).export_all()
