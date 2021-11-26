@@ -21,7 +21,7 @@ class NanoString:
         self.samples = samples
 
         # create list of all attributes in any sample
-        attrs = ["sample_path", "ID"]
+        attrs = ["file_in", "ID"]
         for sample in self.samples:
             for attr in vars(sample).keys():
                 if attr not in attrs:
@@ -36,10 +36,10 @@ class NanoString:
         """Compile each samples attribute into one dataframe including all samples
 
         Args:
-            attribute (str): [description]
+            attribute (str): NanoStringSample attribute to be compiled
 
         Returns:
-            pd.DataFrame: [description]
+            pd.DataFrame: DataFrame with all NanoStringSample info
         """
         for sample in self.samples:
             # try statement allows attributes in only some samples

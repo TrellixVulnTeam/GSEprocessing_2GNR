@@ -8,10 +8,10 @@ from scipy import stats
 
 @dataclass
 class NanoStringSample:
-    sample_path: str
+    file_in: str
 
     def __post_init__(self):
-        with open(self.sample_path) as file_in:
+        with open(self.file_in) as file_in:
             soup = BeautifulSoup(file_in.read(), "html.parser")
         tags = [tag.name for tag in soup.find_all()]
         for tag in tags:
@@ -27,5 +27,4 @@ class NanoStringSample:
                 df = df.set_index("Attribute")
             df.columns.name = tag
             setattr(self, tag, df)
-        id = self.lane_attributes.loc["ID"][0]
-        setattr(self, "ID", id)
+        setattr(self, "ID", self.file_in)
