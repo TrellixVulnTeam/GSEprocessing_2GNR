@@ -10,9 +10,8 @@ from .NanoStringSample import NanoStringSample
 
 
 @dataclass
-class NanoStringRCC:
+class NanoString:
     input_dir: str
-    output_dir: str
 
     def __post_init__(self):
         samples = []
@@ -22,15 +21,14 @@ class NanoStringRCC:
         self.samples = samples
 
         # create list of all attributes in any sample
-        attrs = []
+        attrs = ["sample_path", "ID"]
         for sample in self.samples:
             for attr in vars(sample).keys():
                 if attr not in attrs:
                     attrs.append(attr)
-        attrs.remove("sample_path")
-        attrs.remove("ID")
 
-        for attr in attrs:
+        # remove attrs that wont' be compiled
+        for attr in attrs[2:]:
             df = self.compile_samples(attr)
             setattr(self, attr, df)
 
@@ -107,8 +105,7 @@ class NanoStringRCC:
         df = getattr(self, attr)
         dir_name = pathlib.Path(self.input_dir).stem
         filename = f"{dir_name}-{attr}.csv"
-        file_path = os.path.join(self.output_dir, filename)
-        df.to_csv(file_path)
+        df.to_csv(filename)
 
     def export_all(self) -> None:
         """Export all attributes"""
