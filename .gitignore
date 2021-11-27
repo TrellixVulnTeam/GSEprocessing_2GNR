@@ -2,5 +2,5 @@ Parkinsons
 *.gz
 __pycache__
 token
-Datasets/*
+Datasets
 Obsolete
