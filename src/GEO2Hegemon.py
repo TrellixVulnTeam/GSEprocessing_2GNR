@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
 import GEOparse
-from GEOparse.GEOTypes import GSE
 import pandas as pd
 import os
 import re
@@ -11,19 +10,19 @@ import numpy as np
 @dataclass
 class GEO2Hegemon:
     accessionID: str
+    takeLog: bool
 
     def __post_init__(self):
         # Add GEOparse GSE object as attribute
         gse = GEOparse.get_GEO(geo=str(self.accessionID), silent=True)
         self.gse = gse
 
-    def expr(self, gpl: Any, takeLog: bool = False) -> pd.DataFrame:
+    def expr(self, gpl: str, takeLog: bool) -> pd.DataFrame:
         """Pulls expression data from .soft file
 
         Args:
             gpl (str): a GEOparse gpl machine name
-            takeLog (bool, optional): If True, function takes Log2 of all values. Defaults to False.
-            export (bool, optional): If Ture, function exports to .txt file. Defaults to False.
+            takeLog (bool, optional): If True, function takes Log2 of all values.
 
         Returns:
             pandas.DataFrame: DataFrame of .soft file expression data
@@ -54,7 +53,7 @@ class GEO2Hegemon:
                     expr_df = expr_df.merge(gsm_df, left_index=True, right_index=True)
         return expr_df
 
-    def idx(self, gpl):
+    def idx(self, gpl: str) -> pd.DataFrame:
         """Makes idx dataframe including binary expression information for Boolean Network
 
         Args:
@@ -89,7 +88,7 @@ class GEO2Hegemon:
 
         return idx_df
 
-    def survival(self, gpl):
+    def survival(self, gpl: str) -> pd.DataFrame:
         """Creates metadata information for each GSM (sample)
 
         Args:
@@ -161,7 +160,7 @@ class GEO2Hegemon:
 
         return df
 
-    def ih(self, gpl):
+    def ih(self, gpl: str) -> pd.DataFrame:
         """DataFrame maps GSM name to sample name
 
         Args:
@@ -178,7 +177,7 @@ class GEO2Hegemon:
 
         return ih_df
 
-    def export_all(self, takeLog=False):
+    def export_all(self) -> None:
         """export all files and create an explore.txt file to copy paste into explore.conf
 
         Args:
@@ -193,7 +192,7 @@ class GEO2Hegemon:
             for method in ["expr", "idx", "survival", "ih"]:
                 func = getattr(self, method)
                 if method == "expr":
-                    func = func(gpl, takeLog=takeLog)
+                    func = func(gpl, takeLog=self.takeLog)
                 else:
                     func = func(gpl)
                 filename = f"{self.accessionID}-{gpl.name}-{method}.txt"

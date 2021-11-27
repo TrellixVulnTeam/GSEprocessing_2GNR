@@ -16,6 +16,13 @@ parser.add_argument(
     help="NCBI GEO Accession ID (GSE ID) to parse",
 )
 parser.add_argument(
+    "-l",
+    "--log",
+    default=False,
+    type=str,
+    help="Take Log2() of expr file",
+)
+parser.add_argument(
     "-o",
     "--output_dir",
     metavar="Output Directory",
@@ -41,7 +48,7 @@ def geo2hegemon(accessionID: str, output_dir: str = None, counts: str = None) ->
         counts (str, optional): a raw counts file if required. Defaults to None.
     """
     if output_dir == None:
-        output_dir = "./" + accessionID
+        output_dir = os.path.join(os.getcwd(), accessionID)
 
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
@@ -51,7 +58,8 @@ def geo2hegemon(accessionID: str, output_dir: str = None, counts: str = None) ->
 
     os.chdir(output_dir)
 
-    GEO2Hegemon(accessionID).export_all()
+    print(args.log)
+    GEO2Hegemon(accessionID, args.log).export_all()
 
 
 geo2hegemon(args.accessionID, output_dir=args.output_dir, counts=args.counts)
