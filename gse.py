@@ -58,8 +58,10 @@ def geo2hegemon(accessionID: str, output_dir: str = None, counts: str = None) ->
 
     os.chdir(output_dir)
 
-    print(args.log)
-    GEO2Hegemon(accessionID, args.log).export_all()
+    my_geo = GEO2Hegemon(accessionID=accessionID, takeLog=args.log, export=True)
+    my_geo.explore()
+
+    print(f"{accessionID} parsed.")
 
 
 geo2hegemon(args.accessionID, output_dir=args.output_dir, counts=args.counts)

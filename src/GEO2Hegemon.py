@@ -11,13 +11,25 @@ import numpy as np
 class GEO2Hegemon:
     accessionID: str
     takeLog: bool
+    export: bool = False
 
     def __post_init__(self):
         # Add GEOparse GSE object as attribute
         gse = GEOparse.get_GEO(geo=str(self.accessionID), silent=True)
         self.gse = gse
 
-    def expr(self, gpl: str, takeLog: bool) -> pd.DataFrame:
+        if self.export:
+            for _, gpl in self.gse.gpls.items():
+                for method in ["expr", "idx", "survival", "ih"]:
+                    func = getattr(self, method)
+                    if method == "expr":
+                        func = func(gpl, takeLog=self.takeLog)
+                    else:
+                        func = func(gpl)
+                    filename = f"{self.accessionID}-{gpl.name}-{method}.txt"
+                    func.to_csv(filename, sep="\t")
+
+    def expr(self, gpl: Any, takeLog: bool) -> pd.DataFrame:
         """Pulls expression data from .soft file
 
         Args:
@@ -27,15 +39,16 @@ class GEO2Hegemon:
         Returns:
             pandas.DataFrame: DataFrame of .soft file expression data
         """
-        expr_file = f"{self.accessionID}-{gpl.name}-expr.txt"
+
         # if file exists, as in RNA-seq, use existing file
+        expr_file = f"{self.accessionID}-{gpl.name}-expr.txt"
         if os.path.exists(expr_file):
             print("expr file exists")
             expr_df = pd.read_csv(expr_file, sep="\t")
             expr_df = expr_df.set_index(["ProbeID", "Name"])
         else:
+            # confirm that gsm correlates to called gpl
             for name, gsm in self.gse.gsms.items():
-                # confirm that gsm correlates to called gpl
                 gsm_gpl = gsm.metadata["platform_id"][0]
                 if gsm_gpl != gpl.name:
                     continue
@@ -53,7 +66,7 @@ class GEO2Hegemon:
                     expr_df = expr_df.merge(gsm_df, left_index=True, right_index=True)
         return expr_df
 
-    def idx(self, gpl: str) -> pd.DataFrame:
+    def idx(self, gpl: Any) -> pd.DataFrame:
         """Makes idx dataframe including binary expression information for Boolean Network
 
         Args:
@@ -88,7 +101,7 @@ class GEO2Hegemon:
 
         return idx_df
 
-    def survival(self, gpl: str) -> pd.DataFrame:
+    def survival(self, gpl: Any) -> pd.DataFrame:
         """Creates metadata information for each GSM (sample)
 
         Args:
@@ -160,7 +173,7 @@ class GEO2Hegemon:
 
         return df
 
-    def ih(self, gpl: str) -> pd.DataFrame:
+    def ih(self, gpl: Any) -> pd.DataFrame:
         """DataFrame maps GSM name to sample name
 
         Args:
@@ -177,36 +190,18 @@ class GEO2Hegemon:
 
         return ih_df
 
-    def export_all(self) -> None:
-        """export all files and create an explore.txt file to copy paste into explore.conf
+    def explore(self) -> None:
+        for gpl_name, _ in self.gse.gpls.items():
+            with open(f"{gpl_name}-explore.txt", "w") as file_out:
+                file_out.write("[]\n")
+                file_out.write("name=\n")
 
-        Args:
-            takeLog (bool): If true, take log of all expr data. Defaults to False
-        """
-
-        with open("explore.txt", "w") as file_out:
-            file_out.write("[]\n")
-            file_out.write("name=\n")
-
-        for _, gpl in self.gse.gpls.items():
-            for method in ["expr", "idx", "survival", "ih"]:
-                func = getattr(self, method)
-                if method == "expr":
-                    func = func(gpl, takeLog=self.takeLog)
-                else:
-                    func = func(gpl)
-                filename = f"{self.accessionID}-{gpl.name}-{method}.txt"
-                func.to_csv(filename, sep="\t")
-
-            # create explore.txt file to copy paste into explore.conf
-            with open("explore.txt", "a") as file_out:
                 names = ["expr", "index", "survival", "indexHeader", "info"]
                 file_ends = ["expr", "idx", "survival", "ih", "info"]
                 for name, file_end in zip(names, file_ends):
-                    my_file = f"{self.accessionID}-{gpl.name}-{file_end}.txt"
+                    my_file = f"{self.accessionID}-{gpl_name}-{file_end}.txt"
                     filepath = os.path.join(os.getcwd(), my_file)
                     file_out.write(f"{name}={filepath}\n")
 
-        with open("explore.txt", "a") as file_out:
-            file_out.write("key=\n")
-            file_out.write(f"source={self.accessionID}")
+                file_out.write("key=\n")
+                file_out.write(f"source={self.accessionID}")
