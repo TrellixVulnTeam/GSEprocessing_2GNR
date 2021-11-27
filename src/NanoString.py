@@ -11,13 +11,14 @@ from .NanoStringSample import NanoStringSample
 
 @dataclass
 class NanoString:
-    input_dir: str
+    input: list
 
     def __post_init__(self):
         samples = []
-        for rcc_file in glob.glob(os.path.join(self.input_dir, "*.RCC")):
-            sample = NanoStringSample(rcc_file)
-            samples.append(sample)
+        for rcc_dir in self.input:
+            for rcc_file in glob.glob(os.path.join(rcc_dir, "*.RCC")):
+                sample = NanoStringSample(rcc_file)
+                samples.append(sample)
         self.samples = samples
 
         # create list of all attributes in any sample
@@ -27,7 +28,7 @@ class NanoString:
                 if attr not in attrs:
                     attrs.append(attr)
 
-        # remove attrs that wont' be compiled
+        # remove attrs that shouldn't be compiled
         for attr in attrs[2:]:
             df = self.compile_samples(attr)
             setattr(self, attr, df)
@@ -52,9 +53,6 @@ class NanoString:
                     df = df.merge(to_merge, left_index=True, right_index=True)
             except:
                 pass
-
-        cols = sorted(df.columns, key=lambda x: int(x.split(" ")[1]))
-        df = df.reindex(cols, axis=1)
         return df
 
     def counts_norm(
@@ -103,14 +101,13 @@ class NanoString:
             attr (str): attribute to export
         """
         df = getattr(self, attr)
-        dir_name = pathlib.Path(self.input_dir).stem
-        filename = f"{dir_name}-{attr}.csv"
+        filename = f"{attr}.csv"
         df.to_csv(filename)
 
     def export_all(self) -> None:
         """Export all attributes"""
         dont_export = [
-            "input_dir",
+            "input",
             "output_dir",
             "samples",
             "header",

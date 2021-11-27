@@ -12,8 +12,9 @@ parser = argparse.ArgumentParser(description="CLI For NanoString RCC Processing"
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument(
     "-d",
-    "--directory",
-    metavar="Directory of RCC files",
+    "--directories",
+    nargs="+",
+    metavar="Directories of RCC files",
     help="Directory of RCC files to be parsed",
 )
 group.add_argument(
@@ -37,13 +38,15 @@ if args.output_dir != None:
         os.mkdir(output_dir)
     os.chdir(output_dir)
 else:
-    output_dir = "."
+    output_dir = os.getcwd()
+    output_print = os.path.basename(output_dir)
 
 if args.tarfile != None:
     rcc_dir = tar2rcc(args.tarfile)
     gunzip(rcc_dir)
-    NanoString(rcc_dir).export_all()
-elif args.directory != None:
-    NanoString(args.directory).export_all()
+    rcc_dir_list = [rcc_dir]
+    NanoString(rcc_dir_list).export_all()
+elif args.directories != None:
+    NanoString(args.directories).export_all()
 
-print(f"NanoString files exported to: {output_dir}")
+print(f"NanoString files created in: {output_print}")

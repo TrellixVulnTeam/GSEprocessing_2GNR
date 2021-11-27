@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from bs4 import BeautifulSoup
 from io import StringIO
 import pandas as pd
-import numpy as np
-from scipy import stats
+import os
 
 
 @dataclass
@@ -16,15 +15,14 @@ class NanoStringSample:
         tags = [tag.name for tag in soup.find_all()]
         for tag in tags:
             tag_string = getattr(soup, tag).string.strip()
-            tag_string = StringIO(tag_string)
             if tag == "code_summary":
-                df = pd.read_csv(tag_string)
+                df = pd.read_csv(StringIO(tag_string))
                 df = df[df["Name"].notnull()]
                 df = df.set_index(["CodeClass", "Name", "Accession"])
                 df = df.astype("float")
             else:
-                df = pd.read_csv(tag_string, names=["Attribute", "Value"])
+                df = pd.read_csv(StringIO(tag_string), names=["Attribute", "Value"])
                 df = df.set_index("Attribute")
             df.columns.name = tag
             setattr(self, tag, df)
-        setattr(self, "ID", self.file_in)
+        self.ID = os.path.basename(self.file_in)
