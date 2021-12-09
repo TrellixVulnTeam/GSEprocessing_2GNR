@@ -67,7 +67,7 @@ class MakeHegemon:
                     expr_df = expr_df.merge(gsm_df, left_index=True, right_index=True)
         return expr_df
 
-    def idx(self, gpl: Any, expr_file: str = None) -> pd.DataFrame:
+    def idx(self, gpl: Any = None, expr_file: str = None) -> pd.DataFrame:
         """Makes idx dataframe including binary expression information for Boolean Network
 
         Args:
