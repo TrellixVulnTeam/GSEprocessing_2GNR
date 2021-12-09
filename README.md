@@ -9,7 +9,7 @@ Each tool creates the files required to create the lab's Hegemon html and Boolea
 
 - gse.py: CLI to parse NCBI GEO Accession ID
 - nanostring.py: CLI to parse Nanostring RCC files
-- idex.py: CLI to create IDX file from expr.txt file
+- idx.py: CLI to create IDX file from expr.txt file
 
 
 ## Authors
