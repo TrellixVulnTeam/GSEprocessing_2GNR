@@ -22,23 +22,19 @@ parser.add_argument(
     help="Directory location to file parsed data",
 )
 args = parser.parse_args()
-print(f"Creating IDX file from {args.expr}")
 
 
-def make_idx(expr_file: str, output_dir: str = None) -> None:
+def make_idx(expr_file: str, output_dir: str) -> None:
     """Create a '-idx.txt' file from an '-expr.txt' file
 
     Args:
         expr_file (str): expression file to parse
         output_dir (str, optional): directory to file output. Defaults to None.
     """
-    if output_dir == None:
-        output_dir = os.path.join(os.getcwd(), expr_file)
-
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-
-    os.chdir(output_dir)
+    if output_dir != None:
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+        os.chdir(output_dir)
 
     idx_file = MakeHegemon().idx(expr_file=expr_file)
     idx_export = expr_file[:-8] + "idx.txt"
