@@ -19,7 +19,7 @@ class GetExplore:
 
             for name, type in zip(names, types):
                 my_file = f"{base}-{type}.txt"
-                filepath = os.path.join(path, my_file)
+                filepath = os.path.join(os.getcwd(), my_file)
                 file_out.write(f"{name}={filepath}\n")
 
             file_out.write("key=")
