@@ -3,7 +3,7 @@
 import argparse
 import os
 
-from src.GEO2Hegemon import GEO2Hegemon
+from src.MakeHegemon import MakeHegemon
 from src.Counts2Expr import Counts2Expr
 
 __author__ = "Oliver Tucher"
@@ -39,7 +39,7 @@ args = parser.parse_args()
 print(f"Parsing {args.accessionID}")
 
 
-def geo2hegemon(accessionID: str, output_dir: str = None, counts: str = None) -> None:
+def gse2hegemon(accessionID: str, output_dir: str = None, counts: str = None) -> None:
     """Create hegemon files from NCBI GEO Accession ID
 
     Args:
@@ -58,10 +58,10 @@ def geo2hegemon(accessionID: str, output_dir: str = None, counts: str = None) ->
 
     os.chdir(output_dir)
 
-    my_geo = GEO2Hegemon(accessionID=accessionID, takeLog=args.log, export=True)
+    my_geo = MakeHegemon(accessionID=accessionID, takeLog=args.log, export_all=True)
     my_geo.explore()
 
     print(f"{accessionID} parsed.")
 
 
-geo2hegemon(args.accessionID, output_dir=args.output_dir, counts=args.counts)
+gse2hegemon(args.accessionID, output_dir=args.output_dir, counts=args.counts)
