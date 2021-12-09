@@ -37,12 +37,14 @@ def make_idx(expr_file: str, output_dir: str) -> None:
         os.chdir(output_dir)
 
     idx_file = MakeHegemon().idx(expr_file=expr_file)
-    idx_export = expr_file[:-8] + "idx.txt"
+    idx_export = expr_file[:-9] + "-idx.txt"
     idx_file.to_csv(idx_export, sep="\t")
+
+    print(f"{idx_export} file created.")
 
     GetExplore(expr_file)
 
-    print(f"{idx_export} file created.")
+    print(f"Explore.txt file created.")
 
 
 make_idx(args.expr, output_dir=args.output_dir)

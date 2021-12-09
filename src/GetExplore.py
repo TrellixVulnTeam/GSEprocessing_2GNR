@@ -8,8 +8,8 @@ class GetExplore:
 
     def __post_init__(self) -> None:
         path = os.path.dirname(self.expr_file)
-        base = self.expr_file[:-8]
-        export = os.path.join(path, f"{base}explore.txt")
+        base = self.expr_file[:-9]
+        export = os.path.join(path, f"{base}-explore.txt")
         with open(export, "w") as file_out:
             file_out.write("[]\n")
             file_out.write("name=\n")
