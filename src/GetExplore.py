@@ -22,4 +22,4 @@ class GetExplore:
                 filepath = os.path.join(path, my_file)
                 file_out.write(f"{name}={filepath}\n")
 
-            file_out.write("key=\n")
+            file_out.write("key=")
