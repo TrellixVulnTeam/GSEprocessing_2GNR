@@ -17,6 +17,7 @@ parser.add_argument(
 parser.add_argument(
     "-o",
     "--output_dir",
+    default=None,
     metavar="Output Directory",
     help="Directory location to file parsed data",
 )
