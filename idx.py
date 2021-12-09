@@ -4,6 +4,7 @@ import argparse
 import os
 
 from src.MakeHegemon import MakeHegemon
+from src.GetExplore import GetExplore
 
 __author__ = "Oliver Tucher"
 
@@ -41,6 +42,8 @@ def make_idx(expr_file: str, output_dir: str = None) -> None:
     idx_file = MakeHegemon().idx(expr_file=expr_file)
     idx_export = expr_file[:-8] + "idx.txt"
     idx_file.to_csv(idx_export, sep="\t")
+
+    GetExplore(expr_file)
 
     print(f"{idx_export} file created.")
 
