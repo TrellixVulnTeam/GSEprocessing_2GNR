@@ -1,0 +1,13 @@
+ArrayID	c title	c type	c channel_count	c source_name_ch1	c organism_ch1	c taxid_ch1	c tissue	c cell type	c molecule_ch1	c label_ch1	c description	c data_row_count
+GSM3722267	NK alone donor 1	RNA	1	Control	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Control	706
+GSM3722268	NK alone donor 2	RNA	1	Control	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Control	706
+GSM3722269	NK alone donor 3	RNA	1	Control	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Control	706
+GSM3722270	NK CTV-1 6h donor 1	RNA	1	Tumor-primed NK cells (6h)	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Tumor-primed NK cells (6h)	706
+GSM3722271	NK CTV-1 6h donor 2	RNA	1	Tumor-primed NK cells (6h)	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Tumor-primed NK cells (6h)	706
+GSM3722272	NK CTV-1 6h donor 3	RNA	1	Tumor-primed NK cells (6h)	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Tumor-primed NK cells (6h)	706
+GSM3722273	NK CTV-1 16h donor 1	RNA	1	Tumor-primed NK cells (16h)	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Tumor-primed NK cells (16h)	706
+GSM3722274	NK CTV-1 16h donor 2	RNA	1	Tumor-primed NK cells (16h)	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Tumor-primed NK cells (16h)	706
+GSM3722275	NK CTV-1 16h donor 3	RNA	1	Tumor-primed NK cells (16h)	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Tumor-primed NK cells (16h)	706
+GSM3722276	NK IL2 donor 1	RNA	1	Lymphokine-activated NK cells	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Lymphokine-activated NK cells	706
+GSM3722277	NK IL2 donor 2	RNA	1	Lymphokine-activated NK cells	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Lymphokine-activated NK cells	706
+GSM3722278	NK IL2 donor 3	RNA	1	Lymphokine-activated NK cells	Homo sapiens	9606	peripheral blood	natural killer cells	polyA RNA	Target-probe complex	Lymphokine-activated NK cells	706

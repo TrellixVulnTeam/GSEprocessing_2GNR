@@ -1,0 +1,9 @@
+[]
+name=
+expr=/mnt/Users/oliver/GSEprocessing/GSE129800/GSE129800-GPL23816-expr.txt
+index=/mnt/Users/oliver/GSEprocessing/GSE129800/GSE129800-GPL23816-idx.txt
+survival=/mnt/Users/oliver/GSEprocessing/GSE129800/GSE129800-GPL23816-survival.txt
+indexHeader=/mnt/Users/oliver/GSEprocessing/GSE129800/GSE129800-GPL23816-ih.txt
+info=/mnt/Users/oliver/GSEprocessing/GSE129800/GSE129800-GPL23816-info.txt
+key=
+source=GSE129800
