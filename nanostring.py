@@ -15,7 +15,7 @@ group.add_argument(
     "-d",
     "--directories",
     nargs="+",
-    help="Directory of RCC files to be parsed",
+    help="Directories of RCC files to be parsed",
 )
 group.add_argument(
     "-t",
